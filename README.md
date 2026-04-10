@@ -29,7 +29,7 @@ $$s = (index_{base} + i + seed) \pmod{80}$$
 | :--- | :--- | :--- |
 | **Single Fill-in** | ✅ Stable | Single text input detection and entry. |
 | **Standard MCQ** | ✅ Stable | Radio button selection and auto-submit. |
-| **Multiple Fill-in** | ⏳ Planned | Handling arrays of text inputs within one slide. |
+| **Multiple Fill-in/Options** | ⏳ Planned | Handling arrays of text inputs within one slide. |
 | **Drag & Drop** | ⏳ Backlog | Identifying coordinate-based or sortable elements. |
 
 ---
