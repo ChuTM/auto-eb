@@ -54,7 +54,7 @@ $$s = (index_{base} + i + seed) \pmod{80}$$
 
 ### For Users (Tampermonkey)
 1. Install the [Tampermonkey](https://www.tampermonkey.net/) extension.
-2. Copy the contents of `dist/autoeb.user.js`.
+2. Copy the contents of `dist/autoeb.user.js` or open [https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js](https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js) in the browser.
 3. Create a "New Script" in Tampermonkey and paste the code.
 4. Navigate to the Wiseman EB lesson page and click **"Activate Auto EB"**.
 
