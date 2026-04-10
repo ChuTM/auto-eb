@@ -1,4 +1,5 @@
 import { decrypt, decodeHtml, addToLog, addToTable } from "./utils.js";
+import { TIMEOUT } from "./config.js";
 
 async function crackCourse() {
 	try {
@@ -147,9 +148,9 @@ export function startAutomation() {
 				submitBtn?.click();
 				setTimeout(() => {
 					iframe?.querySelector("button[btn-for='next']")?.click();
-					setTimeout(startAutomation, 500);
-				}, 200);
-			}, 500);
+					setTimeout(startAutomation, TIMEOUT);
+				}, TIMEOUT);
+			}, TIMEOUT);
 		}
 	});
 }

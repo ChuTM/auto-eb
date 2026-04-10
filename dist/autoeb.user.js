@@ -33,6 +33,7 @@
 
   // src/config.js
   var MAP = "c3D1RFP9eM[UjINfOZi0Qg+mhkxSJ5p* uX8B}`-rs,LqAH@lnbVT.C{z4YWtGv72^/aw|do_6\\yE~]K";
+  var TIMEOUT = 0;
 
   // src/utils.js
   function decrypt(encoded, seed) {
@@ -190,9 +191,9 @@
           setTimeout(() => {
             var _a2;
             (_a2 = iframe == null ? void 0 : iframe.querySelector("button[btn-for='next']")) == null ? void 0 : _a2.click();
-            setTimeout(startAutomation, 500);
-          }, 200);
-        }, 500);
+            setTimeout(startAutomation, TIMEOUT);
+          }, TIMEOUT);
+        }, TIMEOUT);
       }
     });
   }
