@@ -6,7 +6,7 @@
 ---
 
 <p align="center" width="100%">
-   <video src="https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/attachments/demo-video.mp4" width="80%" controls autoplay loop></video>
+   <video src="https://github.com/user-attachments/assets/2d6ac87f-470f-4371-9583-d1d349d34936" width="80%" controls autoplay loop></video>
 </p>
 
 ## 🚀 Getting Started
