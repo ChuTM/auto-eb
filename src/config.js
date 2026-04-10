@@ -9,4 +9,4 @@ export const JUNK_KEYWORDS = new Set([
 	"question_answer",
 ]);
 
-export const TIMEOUT = 0;
+export const TIMEOUT = 10; // Prevent error

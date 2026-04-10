@@ -33,7 +33,7 @@
 
   // src/config.js
   var MAP = "c3D1RFP9eM[UjINfOZi0Qg+mhkxSJ5p* uX8B}`-rs,LqAH@lnbVT.C{z4YWtGv72^/aw|do_6\\yE~]K";
-  var TIMEOUT = 0;
+  var TIMEOUT = 10;
 
   // src/utils.js
   function decrypt(encoded, seed) {
