@@ -1,0 +1,23 @@
+{
+  "dependencies": {
+    "esbuild": "^0.28.0"
+  },
+  "name": "auto-eb",
+  "version": "1.0.0",
+  "description": "**Complete your EB tasks in seconds.**   <u>Auto EB</u> is a lightweight automation engine designed to automatically answer all your questions correctly.",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ChuTM/auto-eb.git"
+  },
+  "author": "ReTrn",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/ChuTM/auto-eb/issues"
+  },
+  "homepage": "https://github.com/ChuTM/auto-eb#readme"
+}
