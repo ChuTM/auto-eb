@@ -1,93 +1,77 @@
 # 🚀 Auto EB
 
 **Complete your EB tasks in seconds.**  
-<u>Auto EB</u> is a lightweight automation engine designed to automatically answer all your questions correctly.
+`Auto EB` is a high-efficiency automation engine designed to parse, decrypt, and solve Wiseman LMS tasks automatically.
 
 ---
 
-## 🛠️ How it Works
+## 🛠️ How It Works
 
-The tool operates through a four-stage pipeline:
-1.  **Fetch**: Retrieves the question XML/dataset from the server.
-2.  **Analyze**: Parses the dataset to identify question types and locations.
-3.  **Decrypt**: Decodes the obfuscated correct answers using the internal `MAP` cipher.
-4.  **Inject**: Detects DOM input fields, autofills the decrypted values, and triggers the submit event.
+The engine operates through a coordinated four-stage pipeline:
 
-### Decryption Logic
-The core obfuscation relies on a character mapping shift. The decryption function calculates a shifted index based on the character code and a seed value ($t$):
+1.  **Extraction**: Locates the active course `iframe` and fetches the underlying `course_pc.exml` dataset.
+2.  **Analysis**: Parses the XML structure to map question types (fill-in/MCQ) and retrieve the encryption `seed`.
+3.  **Decryption**: Processes obfuscated strings using a custom Caesar-style shift against a specific internal `MAP` cipher.
+4.  **Injection**: Matches the current DOM state to the decrypted database, autofills values, and programmatically triggers `submit` and `next` events.
 
-```javascript
-const MAP = "c3D1RFP9eM[UjINfOZi0Qg+mhkxSJ5p* uX8B}`-rs,LqAH@lnbVT.C{z4YWtGv72^/aw|do_6\\yE~]K";
+### The Decryption Logic
+The core security relies on a character mapping shift. The decryption function calculates a shifted index based on the character code and a dynamic seed value $s$:
 
-function decrypt(n, t) {
-    let i = "";
-    for (let o, s, r = 0; r < n.length; r++) {
-        o = n.charCodeAt(r);
-        // Determine base offset
-        s = 32 === o ? 0 : o >= 42 && o <= 57 ? o - 41 : o >= 64 && o <= 126 ? o - 47 : -1;
-        
-        if (s >= 0 && s <= 79) {
-            s = (s + r + t) % 80; // Calculate shifted index
-            i += MAP.charAt(s);
-        } else {
-            i += n.charAt(r);
-        }
-    }
-    return i;
-}
-```
+$$s = (index_{base} + i + seed) \pmod{80}$$
+
+
 
 ---
 
 ## 📊 Feature Roadmap
 
-| Feature | Status |
-| :--- | :--- |
-| **Single Fill-in-the-blank** | ✅ Supported |
-| **Multiple Choice (MCQ)** | ✅ Supported |
-| **Multiple Fill-in-the-blank** | ⏳ To Do |
-| **Selection Questions** | ⏳ To Do |
+| Feature | Status | Description |
+| :--- | :--- | :--- |
+| **Single Fill-in** | ✅ Stable | Single text input detection and entry. |
+| **Standard MCQ** | ✅ Stable | Radio button selection and auto-submit. |
+| **Multiple Fill-in** | ⏳ Planned | Handling arrays of text inputs within one slide. |
+| **Drag & Drop** | ⏳ Backlog | Identifying coordinate-based or sortable elements. |
 
 ---
 
-## 📁 Project Structure
+## 📂 Project Structure
 
 ```text
-├── dist/                # Compiled userscript output
-├── res/                 # Resource files & original source samples
-│   ├── craker.js        # Internal decryption helper
-│   └── main.*.js        # Reference vendor scripts
-├── src/                 # Core logic
-│   ├── config.js        # User configurations
-│   ├── header.js        # Userscript Metadata block
-│   ├── logic.js         # Answer parsing & decryption
-│   ├── main.js          # Entry point
-│   └── utils.js         # DOM helpers
-├── build.mjs            # Build script (ESM)
-└── package.json         # Dependencies and metadata
+├── dist/                # Compiled Userscript (Ready for Tampermonkey)
+├── src/                 # Modular Source Code
+│   ├── config.js        # Global constants & Cipher MAP
+│   ├── header.js        # Tampermonkey metadata block
+│   ├── logic.js         # DOM scraping & automation flow
+│   ├── main.js          # UI Entry point (The "Activate" button)
+│   └── utils.js         # Decryption engine & HTML sanitizers
+├── build.mjs            # ESBuild configuration script
+└── package.json         # Build dependencies
 ```
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
-*   [Node.js](https://nodejs.org/) (Latest LTS recommended)
+### For Users (Tampermonkey)
+1. Install the [Tampermonkey](https://www.tampermonkey.net/) extension.
+2. Copy the contents of `dist/autoeb.user.js`.
+3. Create a "New Script" in Tampermonkey and paste the code.
+4. Navigate to the Wiseman EB lesson page and click **"Activate Auto EB"**.
 
-### Installation
-1. Clone the repository.
-2. Install dependencies:
+### For Developers (Build from Source)
+If you want to modify the logic or the cipher:
+1. **Install Dependencies**:
    ```bash
    npm install
    ```
-
-### Compilation
-To build the final `dist/autoeb.user.js` file, run:
-```bash
-node build.mjs
-```
+2. **Build**:
+   ```bash
+   node build.mjs
+   ```
+   *This bundles the source files into a single IIFE script in the `dist` folder.*
 
 ---
 
 ## ⚠️ Disclaimer
-This tool is for educational and research purposes only. Please use responsibly and in accordance with your institution's academic integrity policies.
+**For Educational Purposes Only.**  
+This project is a proof-of-concept demonstrating how client-side obfuscation can be bypassed. The authors are not responsible for any misuse, academic consequences, or account bans. Please use this tool responsibly and respect your institution's academic integrity policies.
