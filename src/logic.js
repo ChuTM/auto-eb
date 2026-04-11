@@ -5,28 +5,34 @@ document.addEventListener("DOMContentLoaded", () => {
 	console.log("[Auto EB] Plugin Ready.");
 });
 
-async function crackCourse() {
+export async function getXMLData() {
+	const overlay = document.querySelector(".overlay-player");
+	if (!overlay?.contentDocument) throw new Error("Overlay player not found");
+
+	const iframe = overlay.contentDocument.querySelector("iframe");
+	if (!iframe?.contentDocument) throw new Error("Course iframe not found");
+
+	// Replace the old baseURL line with this logic:
+	const iframeSrc = iframe.contentDocument.location.href;
+	// This regex grabs everything up to the last forward slash to get the directory
+	const baseURL = iframeSrc.substring(0, iframeSrc.lastIndexOf("/"));
+
+	console.log(`Compiled course data: ${baseURL}/course/course_pc.exml`);
+	const res = await fetch(`${baseURL}/course/course_pc.exml`);
+	if (!res.ok) throw new Error(`HTTP ${res.status}`);
+	return await res.text();
+}
+
+export function getSeedFromXML(xml) {
+	const seedMatch = xml.match(/seed="(\d+)"/);
+	return seedMatch ? parseInt(seedMatch[1], 10) : 0;
+}
+
+export async function crackCourse() {
 	try {
-		const overlay = document.querySelector(".overlay-player");
-		if (!overlay?.contentDocument)
-			throw new Error("Overlay player not found");
+		const xml = await getXMLData();
 
-		const iframe = overlay.contentDocument.querySelector("iframe");
-		if (!iframe?.contentDocument)
-			throw new Error("Course iframe not found");
-
-		// Replace the old baseURL line with this logic:
-		const iframeSrc = iframe.contentDocument.location.href;
-		// This regex grabs everything up to the last forward slash to get the directory
-		const baseURL = iframeSrc.substring(0, iframeSrc.lastIndexOf("/"));
-
-		console.log(`Compiled course data: ${baseURL}/course/course_pc.exml`);
-		const res = await fetch(`${baseURL}/course/course_pc.exml`);
-		if (!res.ok) throw new Error(`HTTP ${res.status}`);
-		const xml = await res.text();
-
-		const seedMatch = xml.match(/seed="(\d+)"/);
-		const seed = seedMatch ? parseInt(seedMatch[1], 10) : 0;
+		const seed = getSeedFromXML(xml);
 		const questionMatches = [
 			...xml.matchAll(/<question[^>]*?>([\s\S]*?)<\/question>/g),
 		];
@@ -152,9 +158,11 @@ export function startAutomation() {
 				submitBtn?.click();
 				setTimeout(() => {
 					iframe?.querySelector("button[btn-for='next']")?.click();
-					setTimeout(startAutomation, TIMEOUT);
-				}, TIMEOUT);
-			}, TIMEOUT);
+					if (localStorage?.avoidContinuousAnswering !== "AVOID") {
+						setTimeout(startAutomation, TIMEOUT());
+					}
+				}, TIMEOUT());
+			}, TIMEOUT());
 		}
 	});
 }

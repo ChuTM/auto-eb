@@ -9,4 +9,26 @@ export const JUNK_KEYWORDS = new Set([
 	"question_answer",
 ]);
 
-export const TIMEOUT = 10; // Prevent error
+export const TIMEOUT = () => {
+	const DEFAULT = 10;
+	let t = localStorage?.AUTOEB_TIMEOUT || DEFAULT;
+	if (Number.isNaN(parseInt(t))) {
+		// random.1000.25000 (in ms)
+		if (t?.startsWith("random.")) {
+			const min = parseInt(t.split(".")[1]);
+			const max = parseInt(t.split(".")[2]);
+			t = Math.floor(Math.random() * (max - min + 1)) + min;
+		} else {
+			addToLog(
+				"USER SET: AUTOEB_TIMEOUT WRONGLY SET. ≠ random.[s].[e]",
+				"error",
+			);
+			t = DEFAULT;
+		}
+	}
+	if (t < DEFAULT) {
+		addToLog("USER SET: WAIT TIME TOO SHORT.", "warning");
+		t = DEFAULT;
+	}
+	return t;
+}; // Prevent error
