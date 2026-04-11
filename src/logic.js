@@ -1,6 +1,10 @@
 import { decrypt, decodeHtml, addToLog, addToTable } from "./utils.js";
 import { TIMEOUT } from "./config.js";
 
+document.addEventListener("DOMContentLoaded", () => {
+	console.log("[Auto EB] Plugin Ready.");
+});
+
 async function crackCourse() {
 	try {
 		const overlay = document.querySelector(".overlay-player");
@@ -15,7 +19,7 @@ async function crackCourse() {
 		const iframeSrc = iframe.contentDocument.location.href;
 		// This regex grabs everything up to the last forward slash to get the directory
 		const baseURL = iframeSrc.substring(0, iframeSrc.lastIndexOf("/"));
-		
+
 		console.log(`Compiled course data: ${baseURL}/course/course_pc.exml`);
 		const res = await fetch(`${baseURL}/course/course_pc.exml`);
 		if (!res.ok) throw new Error(`HTTP ${res.status}`);

@@ -4,8 +4,9 @@
 // @version      1.0
 // @description  Complete your EB tasks in seconds.
 // @author       ReTrn.
-// @match        https://lms1.wiseman.com.hk/lms/user/secure/course/eb/select_lesson/
-// @grant        none
+// @grant        GM_xmlhttpRequest
+// @run-at       document-end
+// @match        https://*.wiseman.com.hk/*
 // @updateURL    https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js
 // @downloadURL  https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js
 // ==/UserScript==
@@ -67,6 +68,9 @@
   }
 
   // src/logic.js
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log("[Auto EB] Plugin Ready.");
+  });
   function crackCourse() {
     return __async(this, null, function* () {
       try {
