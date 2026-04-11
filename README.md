@@ -69,8 +69,9 @@ $$s = (index_{base} + i + seed) \pmod{80}$$
 | :--------------------------- | :--------- | :------------------------------------------------- |
 | **Single Fill-in**           | ✅ Stable  | Single text input detection and entry.             |
 | **Standard MCQ**             | ✅ Stable  | Radio button selection and auto-submit.            |
-| **Multiple Fill-in/Options** | ⏳ Planned | Handling arrays of text inputs within one slide.   |
-| **Drag & Drop**              | ⏳ Backlog | Identifying coordinate-based or sortable elements. |
+| **Multiple Fill-in** | ⏳ Planned | Handling arrays of text inputs within one slide.   |
+| **Single/Multiple Dropdown Questions**              | ⏳ Planned | Identify multiple or single dropdown menus. |
+｜ **Variable Answering Time** | ⏳ Planned | Avoid being logged and suspected by your teacher. |
 
 ---
 
