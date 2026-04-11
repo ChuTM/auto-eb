@@ -1,4 +1,4 @@
-# 🚀 Auto EB
+# 📖 Auto EB
 
 **Complete your EB tasks in seconds.**  
 `Auto EB` is a high-efficiency automation engine designed to parse, decrypt, and solve Wiseman LMS tasks automatically.
@@ -9,14 +9,26 @@
    <video src="https://github.com/user-attachments/assets/2d6ac87f-470f-4371-9583-d1d349d34936" width="80%" controls autoplay loop></video>
 </p>
 
+Watch [attachments/demo-video.mp4](attachments/demo-video.mp4).
+
 ## 🚀 Getting Started
+
+### Tutorial Video
+
+<p align="center" width="100%">
+   <video src="https://github.com/user-attachments/assets/1341b289-c75c-42ca-9d2c-194c42be25a5" width="80%" controls autoplay loop></video>
+</p>
+
+Watch [attachments/tutorial.mp4](attachments/tutorial.mp4).
 
 ### For Users (Tampermonkey)
 
 1. Install the [Tampermonkey](https://www.tampermonkey.net/) extension.
 2. Copy the contents of `dist/autoeb.user.js` or open [https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js](https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js) in the browser.
 3. Create a "New Script" in Tampermonkey and paste the code.
-4. Navigate to the Wiseman EB lesson page and click **"Activate Auto EB"**.
+4. Make sure in "Manage Extensions", the `Developer Mode` is enabled.
+5. Check `Allow user scripts` in "My Extensions > Tampermonkey > Details".
+6. Navigate to the Wiseman EB lesson page and click **"Activate Auto EB"**.
 
 ### For Developers (Build from Source)
 
