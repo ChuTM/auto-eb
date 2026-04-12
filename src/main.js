@@ -7,6 +7,8 @@ import {
 import { addToLog, decrypt } from "./utils.js";
 
 (function () {
+	unsafeWindow.AUTOEB_VERSION = "1.21"; // VERSIONING
+
 	document.body.classList.add("homepage");
 	document.createElement("link");
 	let prism_style = document.createElement("link");

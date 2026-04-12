@@ -5,8 +5,10 @@
 // @description  Complete your EB tasks in seconds.
 // @author       ReTrn.
 // @grant        GM_xmlhttpRequest
+// @grant        unsafeWindow
 // @require      https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js
 // @require      https://alb-cdn.web.app/popupjs/pu.min.js
+// @require      https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/services/updater.user.js
 // @run-at       document-end
 // @match        https://*.wiseman.com.hk/*
 // @updateURL    https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js
@@ -272,6 +274,7 @@
 
   // src/main.js
   (function() {
+    unsafeWindow.AUTOEB_VERSION = "1.21";
     document.body.classList.add("homepage");
     document.createElement("link");
     let prism_style = document.createElement("link");
