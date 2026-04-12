@@ -18,10 +18,6 @@ export function getSeedFromXML(xml) {
     return seedMatch ? parseInt(seedMatch[1], 10) : 0;
 }
 
-/**
- * Parses the XML and reconstructs sentences for fill-in-the-blank questions
- * to avoid matching generic header instructions.
- */
 export async function crackCourse() {
     try {
         const xmlString = await getXMLData();
@@ -35,18 +31,18 @@ export async function crackCourse() {
             const qType = q.getAttribute("type");
 
             // --- MC (SMC) LOGIC ---
+            // Grabs the index directly from the parent question tag
             if (qType === "smc") {
                 const qCorrectAttr = q.getAttribute("correct");
                 if (qCorrectAttr) {
-                    // SMC correct values are indices ("1", "2") on the question tag itself
                     const isNumeric = /^\d+$/.test(qCorrectAttr);
                     let val = isNumeric ? qCorrectAttr : decrypt(qCorrectAttr, seed);
                     if (val) answers.push(val);
                 }
             } 
             // --- FILL-IN LOGIC ---
+            // Searches for 'correct' attributes inside child nodes
             else {
-                // Fill-in answers are inside child <text> or <answer> tags
                 q.querySelectorAll("[correct]").forEach((node) => {
                     const nodeCorrect = node.getAttribute("correct");
                     if (nodeCorrect) {
@@ -58,7 +54,6 @@ export async function crackCourse() {
                 });
             }
 
-            // Reconstruct body text for fill-ins
             let bodyParts = Array.from(q.querySelectorAll("set text:not([correct])"))
                 .map(t => t.getAttribute("text") || t.textContent);
             let reconstructedBody = bodyParts.join(" ").trim();
@@ -76,7 +71,7 @@ export async function crackCourse() {
             };
         });
     } catch (err) { 
-        addToLog(`CRITICAL: XML Extraction Error: ${err.message}`, "DEV");
+        addToLog(`CRITICAL: XML Error: ${err.message}`, "DEV");
         return []; 
     }
 }
@@ -90,9 +85,6 @@ async function showAnswerForCurrentQuestion() {
     const uiBody = decodeHtml(iframe.querySelector(".c_question-body")?.innerText || "");
     const isRadio = iframe.querySelectorAll('input[type="radio"]').length > 0;
 
-    addToLog(`DEBUG SESSION: ${isRadio ? "Multiple Choice" : "Fill-in"}`, "DEV");
-
-    // Preparations for the table... (Code remains same as previous version)
     const debugData = allQuestions.map(q => {
         let score = 0;
         let matchResult = "NO";
@@ -102,13 +94,12 @@ async function showAnswerForCurrentQuestion() {
             matchResult = isMatch ? "YES" : "NO";
         } else {
             score = getSimilarity(uiBody, q.bodyText);
-            matchResult = score > 0.6 ? `YES` : `NO`;
+            matchResult = score > 0.6 ? "YES" : "NO";
         }
         return { ID: q.id, Match: matchResult, "XML Reconstructed": q.bodyText.slice(0, 50), "Answers": q.answers.join(" | "), _score: score };
     });
     addToTable(debugData);
 
-    // Finding the match
     let found = null;
     if (isRadio) {
         found = allQuestions.find(q => {
@@ -126,62 +117,62 @@ async function showAnswerForCurrentQuestion() {
         });
     }
 
-    if (found) {
-        // --- THIS IS THE PART YOU NEED ---
-        addToLog(`[TARGET] ID: ${found.id} | TYPE: ${found.type}`, "DEV");
-        addToLog(`[ANSWERS FOUND] ${JSON.stringify(found.answers)}`, "DEV");
-        
+    if (found && found.answers.length > 0) {
+        addToLog(`[TARGET] ID: ${found.id} | ANSWERS: ${JSON.stringify(found.answers)}`, "DEV");
         const inputs = iframe.querySelectorAll('input:not([type="hidden"]), select, .c_input-box');
         
         found.answers.forEach((ans, i) => {
             if (isRadio) {
-                // Radio buttons: 'ans' is usually "1", "2", "3" etc.
                 const radioIdx = parseInt(ans) - 1;
                 const radios = iframe.querySelectorAll('input[type="radio"]');
-                
-                addToLog(`[ACTION] Attempting to click Radio at Index: ${radioIdx} (Answer was: ${ans})`, "DEV");
-                
                 if (radios[radioIdx]) {
                     radios[radioIdx].checked = true;
                     radios[radioIdx].dispatchEvent(new Event("change", { bubbles: true }));
                     radios[radioIdx].click();
-                    addToLog(`[SUCCESS] Radio ${radioIdx} clicked.`, "DEV");
-                } else {
-                    addToLog(`[ERROR] Radio index ${radioIdx} not found. Total radios: ${radios.length}`, "error");
                 }
             } else {
-                // Fill-ins
                 const el = inputs[i];
                 if (el) {
-                    addToLog(`[ACTION] Filling input ${i} with value: "${ans}"`, "DEV");
                     el.value = ans;
-                    const eventType = el.tagName === "SELECT" ? "change" : "input";
-                    el.dispatchEvent(new Event(eventType, { bubbles: true }));
-                } else {
-                    addToLog(`[ERROR] Input index ${i} not found in UI.`, "error");
+                    el.dispatchEvent(new Event(el.tagName === "SELECT" ? "change" : "input", { bubbles: true }));
                 }
             }
         });
         return true;
     }
-
-    addToLog("❌ FAIL: No matching XML entry found.", "DEV");
     return false;
 }
 
 export function startAutomation() {
     showAnswerForCurrentQuestion().then((success) => {
+        // Only proceed if we actually found an answer to click/fill
         if (success) {
             const iframe = getIframeContext();
             setTimeout(() => {
-                iframe?.querySelector("button[btn-for='submit']")?.click();
+                const submitBtn = iframe?.querySelector("button[btn-for='submit']");
+                if (!submitBtn) return; // Stop if we can't find a submit button
+                
+                submitBtn.click();
+
                 setTimeout(() => {
-                    iframe?.querySelector("button[btn-for='next']")?.click();
+                    const nextBtn = iframe?.querySelector("button[btn-for='next']");
+                    
+                    // IF THERE IS NO NEXT BUTTON, WE ARE AT THE END. STOP.
+                    if (!nextBtn || nextBtn.offsetParent === null) {
+                        addToLog("Finished: No 'Next' button found.", "INFO");
+                        return;
+                    }
+
+                    nextBtn.click();
+
+                    // Check user preference for continuous mode
                     if (localStorage?.avoidContinuousAnswering !== "AVOID") {
                         setTimeout(startAutomation, TIMEOUT());
                     }
                 }, TIMEOUT());
             }, TIMEOUT());
+        } else {
+            addToLog("Automation stopped: No match found for this screen.", "WARN");
         }
     });
 }

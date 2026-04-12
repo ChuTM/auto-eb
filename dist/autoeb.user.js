@@ -175,7 +175,7 @@
           };
         });
       } catch (err) {
-        addToLog2(`CRITICAL: XML Extraction Error: ${err.message}`, "DEV");
+        addToLog2(`CRITICAL: XML Error: ${err.message}`, "DEV");
         return [];
       }
     });
@@ -189,7 +189,6 @@
       const uiHead = decodeHtml(((_a = iframe.querySelector(".c_question-head")) == null ? void 0 : _a.innerText) || "");
       const uiBody = decodeHtml(((_b = iframe.querySelector(".c_question-body")) == null ? void 0 : _b.innerText) || "");
       const isRadio = iframe.querySelectorAll('input[type="radio"]').length > 0;
-      addToLog2(`DEBUG SESSION: ${isRadio ? "Multiple Choice" : "Fill-in"}`, "DEV");
       const debugData = allQuestions.map((q) => {
         let score = 0;
         let matchResult = "NO";
@@ -199,7 +198,7 @@
           matchResult = isMatch ? "YES" : "NO";
         } else {
           score = getSimilarity(uiBody, q.bodyText);
-          matchResult = score > 0.6 ? `YES` : `NO`;
+          matchResult = score > 0.6 ? "YES" : "NO";
         }
         return { ID: q.id, Match: matchResult, "XML Reconstructed": q.bodyText.slice(0, 50), "Answers": q.answers.join(" | "), _score: score };
       });
@@ -220,38 +219,28 @@
           }
         });
       }
-      if (found) {
-        addToLog2(`[TARGET] ID: ${found.id} | TYPE: ${found.type}`, "DEV");
-        addToLog2(`[ANSWERS FOUND] ${JSON.stringify(found.answers)}`, "DEV");
+      if (found && found.answers.length > 0) {
+        addToLog2(`[TARGET] ID: ${found.id} | ANSWERS: ${JSON.stringify(found.answers)}`, "DEV");
         const inputs = iframe.querySelectorAll('input:not([type="hidden"]), select, .c_input-box');
         found.answers.forEach((ans, i) => {
           if (isRadio) {
             const radioIdx = parseInt(ans) - 1;
             const radios = iframe.querySelectorAll('input[type="radio"]');
-            addToLog2(`[ACTION] Attempting to click Radio at Index: ${radioIdx} (Answer was: ${ans})`, "DEV");
             if (radios[radioIdx]) {
               radios[radioIdx].checked = true;
               radios[radioIdx].dispatchEvent(new Event("change", { bubbles: true }));
               radios[radioIdx].click();
-              addToLog2(`[SUCCESS] Radio ${radioIdx} clicked.`, "DEV");
-            } else {
-              addToLog2(`[ERROR] Radio index ${radioIdx} not found. Total radios: ${radios.length}`, "error");
             }
           } else {
             const el = inputs[i];
             if (el) {
-              addToLog2(`[ACTION] Filling input ${i} with value: "${ans}"`, "DEV");
               el.value = ans;
-              const eventType = el.tagName === "SELECT" ? "change" : "input";
-              el.dispatchEvent(new Event(eventType, { bubbles: true }));
-            } else {
-              addToLog2(`[ERROR] Input index ${i} not found in UI.`, "error");
+              el.dispatchEvent(new Event(el.tagName === "SELECT" ? "change" : "input", { bubbles: true }));
             }
           }
         });
         return true;
       }
-      addToLog2("\u274C FAIL: No matching XML entry found.", "DEV");
       return false;
     });
   }
@@ -260,16 +249,23 @@
       if (success) {
         const iframe = getIframeContext();
         setTimeout(() => {
-          var _a;
-          (_a = iframe == null ? void 0 : iframe.querySelector("button[btn-for='submit']")) == null ? void 0 : _a.click();
+          const submitBtn = iframe == null ? void 0 : iframe.querySelector("button[btn-for='submit']");
+          if (!submitBtn) return;
+          submitBtn.click();
           setTimeout(() => {
-            var _a2;
-            (_a2 = iframe == null ? void 0 : iframe.querySelector("button[btn-for='next']")) == null ? void 0 : _a2.click();
+            const nextBtn = iframe == null ? void 0 : iframe.querySelector("button[btn-for='next']");
+            if (!nextBtn || nextBtn.offsetParent === null) {
+              addToLog2("Finished: No 'Next' button found.", "INFO");
+              return;
+            }
+            nextBtn.click();
             if ((localStorage == null ? void 0 : localStorage.avoidContinuousAnswering) !== "AVOID") {
               setTimeout(startAutomation, TIMEOUT());
             }
           }, TIMEOUT());
         }, TIMEOUT());
+      } else {
+        addToLog2("Automation stopped: No match found for this screen.", "WARN");
       }
     });
   }
