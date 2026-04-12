@@ -28,13 +28,14 @@ export function decrypt(encoded, seed) {
  * 4. Removes all whitespace.
  */
 export function decodeHtml(html) {
-	if (!html) return "";
-	const doc = new DOMParser().parseFromString(html, "text/html");
-	const textContent = doc.documentElement.textContent || "";
-	return textContent
-		.toLowerCase()
-		.replace(/[^a-z0-9]/g, "") // Removes everything except lowercase a-z and 0-9
-		.trim();
+    if (!html) return "";
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const textContent = doc.documentElement.textContent || "";
+    return textContent
+        .toLowerCase()
+        .replace(/\s+/g, ' ') // Collapse multiple spaces/newlines into one space
+        .replace(/[^a-z0-9 ]/g, "") // Keep letters, numbers, AND spaces
+        .trim();
 }
 
 export function addToLog(m, type = "INFO") {

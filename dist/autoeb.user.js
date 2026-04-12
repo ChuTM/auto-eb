@@ -82,7 +82,7 @@
     if (!html) return "";
     const doc = new DOMParser().parseFromString(html, "text/html");
     const textContent = doc.documentElement.textContent || "";
-    return textContent.toLowerCase().replace(/[^a-z0-9]/g, "").trim();
+    return textContent.toLowerCase().replace(/\s+/g, " ").replace(/[^a-z0-9 ]/g, "").trim();
   }
   function addToLog2(m, type = "INFO") {
     const color = type === "DEV" ? "color: #00ff00" : "color: #ffffff";
@@ -109,6 +109,9 @@
       if (i > 0) costs[shorter.length] = lastValue;
     }
     return (longer.length - costs[shorter.length]) / parseFloat(longer.length);
+  }
+  function addToTable(t) {
+    console.table(t);
   }
 
   // src/logic.js
@@ -137,26 +140,42 @@
         const xmlDoc = parser.parseFromString(xmlString, "text/xml");
         const seed = getSeedFromXML(xmlString);
         const questions = xmlDoc.querySelectorAll("question");
-        return Array.from(questions).map((q, index) => {
-          var _a;
-          const answers = [];
-          q.querySelectorAll("[correct]").forEach((node) => {
-            let val = decrypt(node.getAttribute("correct"), seed);
-            answers.push((val == null ? void 0 : val.includes("/")) ? val.split("/")[0] : val);
-          });
+        return Array.from(questions).map((q, idx) => {
+          let answers = [];
           const qType = q.getAttribute("type");
-          if (qType === "smc" && answers.length === 0) {
-            const correctVal = q.getAttribute("correct");
-            if (correctVal && /[A-Z]/.test(correctVal)) {
-              const options = q.querySelectorAll("answer");
-              answers.push(((_a = options[correctVal.charCodeAt(0) - 65]) == null ? void 0 : _a.getAttribute("text")) || decrypt(correctVal, seed));
+          if (qType === "smc") {
+            const qCorrectAttr = q.getAttribute("correct");
+            if (qCorrectAttr) {
+              const isNumeric = /^\d+$/.test(qCorrectAttr);
+              let val = isNumeric ? qCorrectAttr : decrypt(qCorrectAttr, seed);
+              if (val) answers.push(val);
             }
+          } else {
+            q.querySelectorAll("[correct]").forEach((node) => {
+              const nodeCorrect = node.getAttribute("correct");
+              if (nodeCorrect) {
+                let val = decrypt(nodeCorrect, seed);
+                if (val) {
+                  answers.push(val.includes("/") ? val.split("/")[0] : val);
+                }
+              }
+            });
           }
-          const bodyText = Array.from(q.querySelectorAll("set")).map((s) => decodeHtml(s.textContent)).join("");
-          const headerText = decodeHtml(q.getAttribute("text") || "");
-          return { type: qType, headerText, bodyText, answers };
+          let bodyParts = Array.from(q.querySelectorAll("set text:not([correct])")).map((t) => t.getAttribute("text") || t.textContent);
+          let reconstructedBody = bodyParts.join(" ").trim();
+          if (reconstructedBody.length < 3) {
+            reconstructedBody = q.getAttribute("text") || "";
+          }
+          return {
+            id: idx,
+            type: qType,
+            headerText: q.getAttribute("text") || "",
+            bodyText: decodeHtml(reconstructedBody),
+            answers
+          };
         });
       } catch (err) {
+        addToLog2(`CRITICAL: XML Extraction Error: ${err.message}`, "DEV");
         return [];
       }
     });
@@ -169,46 +188,70 @@
       if (!iframe || allQuestions.length === 0) return false;
       const uiHead = decodeHtml(((_a = iframe.querySelector(".c_question-head")) == null ? void 0 : _a.innerText) || "");
       const uiBody = decodeHtml(((_b = iframe.querySelector(".c_question-body")) == null ? void 0 : _b.innerText) || "");
-      const inputs = iframe.querySelectorAll("input, select");
-      addToLog2(`UI Body: ${uiBody.slice(0, 50)}...`, "DEV");
-      let found = null;
-      let bestScore = 0;
-      allQuestions.forEach((q) => {
-        if (!q.bodyText) return;
-        const score = getSimilarity(uiBody, q.bodyText);
-        if (score > bestScore) {
-          bestScore = score;
-          found = q;
+      const isRadio = iframe.querySelectorAll('input[type="radio"]').length > 0;
+      addToLog2(`DEBUG SESSION: ${isRadio ? "Multiple Choice" : "Fill-in"}`, "DEV");
+      const debugData = allQuestions.map((q) => {
+        let score = 0;
+        let matchResult = "NO";
+        if (isRadio) {
+          const xmlHead = decodeHtml(q.headerText);
+          const isMatch = xmlHead.length > 5 && (uiHead.includes(xmlHead) || xmlHead.includes(uiHead));
+          matchResult = isMatch ? "YES" : "NO";
+        } else {
+          score = getSimilarity(uiBody, q.bodyText);
+          matchResult = score > 0.6 ? `YES` : `NO`;
         }
+        return { ID: q.id, Match: matchResult, "XML Reconstructed": q.bodyText.slice(0, 50), "Answers": q.answers.join(" | "), _score: score };
       });
-      if (bestScore < 0.7) {
-        addToLog2("Body match weak, trying Header matching...", "DEV");
-        found = allQuestions.find((q) => uiHead.includes(q.headerText) || q.headerText.includes(uiHead));
+      addToTable(debugData);
+      let found = null;
+      if (isRadio) {
+        found = allQuestions.find((q) => {
+          const xmlHead = decodeHtml(q.headerText);
+          return xmlHead.length > 5 && (uiHead.includes(xmlHead) || xmlHead.includes(uiHead));
+        });
       } else {
-        addToLog2(`Body Match Success (${(bestScore * 100).toFixed(1)}%)`, "DEV");
+        let bestScore = 0;
+        allQuestions.forEach((q) => {
+          const score = getSimilarity(uiBody, q.bodyText);
+          if (score > bestScore && score > 0.6) {
+            bestScore = score;
+            found = q;
+          }
+        });
       }
-      if (found && found.answers.length > 0) {
+      if (found) {
+        addToLog2(`[TARGET] ID: ${found.id} | TYPE: ${found.type}`, "DEV");
+        addToLog2(`[ANSWERS FOUND] ${JSON.stringify(found.answers)}`, "DEV");
+        const inputs = iframe.querySelectorAll('input:not([type="hidden"]), select, .c_input-box');
         found.answers.forEach((ans, i) => {
-          const el = inputs[i];
-          if (!el) return;
-          if (el.tagName === "SELECT") {
-            el.value = ans;
-            el.dispatchEvent(new Event("change", { bubbles: true }));
-          } else if (el.type === "radio") {
-            const idx = parseInt(ans) - 1;
+          if (isRadio) {
+            const radioIdx = parseInt(ans) - 1;
             const radios = iframe.querySelectorAll('input[type="radio"]');
-            if (radios[idx]) {
-              radios[idx].checked = true;
-              radios[idx].dispatchEvent(new Event("change", { bubbles: true }));
+            addToLog2(`[ACTION] Attempting to click Radio at Index: ${radioIdx} (Answer was: ${ans})`, "DEV");
+            if (radios[radioIdx]) {
+              radios[radioIdx].checked = true;
+              radios[radioIdx].dispatchEvent(new Event("change", { bubbles: true }));
+              radios[radioIdx].click();
+              addToLog2(`[SUCCESS] Radio ${radioIdx} clicked.`, "DEV");
+            } else {
+              addToLog2(`[ERROR] Radio index ${radioIdx} not found. Total radios: ${radios.length}`, "error");
             }
           } else {
-            el.value = ans;
-            el.dispatchEvent(new Event("input", { bubbles: true }));
+            const el = inputs[i];
+            if (el) {
+              addToLog2(`[ACTION] Filling input ${i} with value: "${ans}"`, "DEV");
+              el.value = ans;
+              const eventType = el.tagName === "SELECT" ? "change" : "input";
+              el.dispatchEvent(new Event(eventType, { bubbles: true }));
+            } else {
+              addToLog2(`[ERROR] Input index ${i} not found in UI.`, "error");
+            }
           }
         });
         return true;
       }
-      addToLog2("\u274C No unique match found.", "DEV");
+      addToLog2("\u274C FAIL: No matching XML entry found.", "DEV");
       return false;
     });
   }
@@ -222,7 +265,9 @@
           setTimeout(() => {
             var _a2;
             (_a2 = iframe == null ? void 0 : iframe.querySelector("button[btn-for='next']")) == null ? void 0 : _a2.click();
-            if ((localStorage == null ? void 0 : localStorage.avoidContinuousAnswering) !== "AVOID") setTimeout(startAutomation, TIMEOUT());
+            if ((localStorage == null ? void 0 : localStorage.avoidContinuousAnswering) !== "AVOID") {
+              setTimeout(startAutomation, TIMEOUT());
+            }
           }, TIMEOUT());
         }, TIMEOUT());
       }
