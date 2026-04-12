@@ -1,6 +1,7 @@
 # 📖 Auto EB
 
-**Complete your EB tasks in seconds.** `Auto EB` is a high-efficiency automation engine designed to parse, decrypt, and solve Wiseman LMS tasks automatically using fuzzy string matching and DOM injection.
+**Complete your Wiseman EB tasks in seconds.<br>**
+`Auto EB` is a high-efficiency automation engine designed to parse, decrypt, and solve Wiseman LMS tasks automatically using fuzzy string matching and DOM injection.
 
 ---
 
