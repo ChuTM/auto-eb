@@ -42,6 +42,23 @@ Safari requires a third-party app to run userscripts. Download one of the follow
 
 ---
 
+### Safari 瀏覽器用戶 (macOS & iOS)
+
+#### 1. 安裝用戶腳本管理器 (Userscript Manager)
+Safari 需要透過第三方應用程式來執行用戶腳本。請從 App Store 下載以下其中一款：
+* **[Userscripts](https://apps.apple.com/tw/app/userscripts/id1463298887)** (強力推薦，免費且開源)。
+* **Tampermonkey for Safari** (付費版)。
+
+#### 2. 啟用擴充功能
+* 開啟 **Safari 設定** (或偏好設定)。
+* 前往 **擴充功能** 分頁。
+* 找到您選擇的管理器 (例如 "Userscripts") 並 **勾選方框** 以啟用。
+* **iOS 用戶請注意：** 請前往「設定」>「Safari」>「擴充功能」進行啟用。
+
+#### 3. 安裝腳本
+* **方法 A (自動安裝)：** 點擊此連結：[autoeb.user.js](https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js)。Safari 應會自動彈出提示詢問是否「安裝」或「建立」腳本。
+* **方法 B (手動安裝)：** 開啟 [原始腳本代碼](https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js) 並複製所有內容。將其貼上至管理器的控制面板並儲存。
+
 ### For All Other Browsers (Chrome, Edge, Firefox, Brave)
 
 #### 1. Install Tampermonkey
@@ -55,6 +72,20 @@ Visit the **[Tampermonkey Official Website](https://www.tampermonkey.net/)** and
 * Open the [autoeb.user.js](https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js) link and click **Install**.
 
 --- 
+
+### 其他瀏覽器用戶 (Chrome, Edge, Firefox, Brave)
+
+#### 1. 安裝 Tampermonkey
+請造訪 **[Tampermonkey 官方網站](https://www.tampermonkey.net/)** 並安裝擴充功能。
+
+#### 2. 設定瀏覽器
+* **開啟開發者模式：** 前往瀏覽器的「擴充功能」頁面，並將 **「開發者模式」** 切換為 **開啟**。
+* **允許用戶腳本：** 在 Tampermonkey 的詳細設定中，勾選 **「允許存取檔案網址」**。 (針對 Chrome/Edge) 請確保在擴充功能設定中啟用了 **「允許用戶腳本」** 以防止被系統封鎖。
+
+#### 3. 安裝腳本
+* 開啟 [autoeb.user.js](https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js) 連結，然後點擊 **安裝**。
+
+---
 
 ### For Developers (Build from Source)
 
