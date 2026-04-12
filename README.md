@@ -21,14 +21,63 @@ Watch [attachments/demo-video.mp4](attachments/demo-video.mp4).
 
 Watch [attachments/tutorial.mp4](attachments/tutorial.mp4).
 
-### For Users (Tampermonkey)
+---
 
-1. Install the [Tampermonkey](https://www.tampermonkey.net/) extension.
-2. Copy the contents of `dist/autoeb.user.js` or open [https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js](https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js) in the browser.
-3. Create a "New Script" in Tampermonkey and paste the code.
-4. Make sure in "Manage Extensions", the `Developer Mode` is enabled.
-5. Check `Allow user scripts` in "My Extensions > Tampermonkey > Details".
-6. Navigate to the Wiseman EB lesson page and click **"Activate Auto EB"**.
+### For Safari Users (macOS & iOS)
+
+#### 1. Install a Userscript Manager
+Safari requires a third-party app to run userscripts. Download one of the following from the App Store:
+* **Userscripts** (Highly recommended, free, and open-source).
+* **Tampermonkey for Safari** (Paid).
+
+#### 2. Enable the Extension
+* Open **Safari Settings** (or Preferences).
+* Go to the **Extensions** tab.
+* Find your chosen manager (e.g., "Userscripts") and **check the box** to enable it.
+* **Note for iOS:** Go to Settings > Safari > Extensions to enable it there.
+
+#### 3. Configure the Extension Permissions
+* While in the Extensions menu, click on the manager.
+* Ensure "Allow" or "Always Allow on Every Website" is selected so the script can run on the Wiseman EB page.
+
+### 4. Install the Script
+* **Method A (Automatic):** Click this link: [autoeb.user.js](https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js). Safari should prompt you to "Install" or "Create" the script automatically.
+* **Method B (Manual):** * Open the [raw script code](https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js) and copy everything.
+    * Open your Userscript manager's dashboard/editor.
+    * Create a **New Script**, paste the code, and save.
+
+#### 5. Activate on Wiseman EB
+* Navigate to the Wiseman EB lesson page.
+* You may need to refresh the page once.
+* Click the **"Activate Auto EB"** button that appears on the interface.
+
+---
+
+### For All Other Browsers (Chrome, Edge, Firefox, Brave)
+
+#### 1. Install Tampermonkey
+Visit the **[Tampermonkey Official Website](https://www.tampermonkey.net/)** and install the extension for your specific browser.
+
+#### 2. Configure Browser Settings
+To allow custom scripts to run, you must adjust your browser's security settings:
+* **Enable Developer Mode:** Go to your Extensions page (`chrome://extensions` or `edge://extensions`) and toggle **Developer Mode** to **ON**.
+* **Allow User Scripts:**
+    1.  In your browser's Extension settings, click **Details** under Tampermonkey.
+    2.  Find the toggle for **"Allow access to file URLs"** and turn it **ON**.
+    3.  (For Chrome/Edge) Look for the **"Allow user scripts"** setting and ensure it is enabled to prevent the browser from blocking the script execution.
+
+#### 3. Install the Script
+* **Automatic Install:** Open the [autoeb.user.js](https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js) link. Tampermonkey will open a new tab; click **Install**.
+* **Manual Install:**
+    1.  Copy the full code from the [source link](https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js).
+    2.  Click the Tampermonkey icon in your toolbar and select **Create a new script**.
+    3.  Paste the code and select **File > Save**.
+
+#### 4. Activate on Wiseman EB
+1.  Navigate to the **Wiseman EB lesson page**.
+2.  Click the **"Activate Auto EB"** button that appears on the interface.
+
+--- 
 
 ### For Developers (Build from Source)
 
