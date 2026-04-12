@@ -23,9 +23,11 @@ export function decrypt(encoded, seed) {
 }
 
 export function decodeHtml(html) {
-    const txt = document.createElement("textarea");
-    txt.innerHTML = html;
-    return txt.value.replace(/[^a-zA-Z0-9]/g, "");
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const decoded = doc.documentElement.textContent;
+    
+    // Your specific logic to strip non-alphanumeric characters
+    return decoded.replace(/[^a-zA-Z0-9]/g, "");
 }
 
 export function addToLog(m) {
