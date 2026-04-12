@@ -107,14 +107,20 @@ graph TD
 
 ## 📊 Feature Roadmap
 
-| Feature                      | Status     | Description                                        |
-| :--------------------------- | :--------- | :------------------------------------------------- |
-| **Single Fill-in** | ✅ Stable  | Single text input detection and entry.             |
-| **Standard MCQ** | ✅ Stable  | Radio button selection and auto-submit.            |
-| **Fuzzy Matching** | ✅ Stable  | Prevents duplicate header collision errors.         |
-| **Multi Fill-in/Select** | ✅ Stable  | Supports multiple inputs and dropdowns per slide.   |
-| **Variable Timing** | ✅ Stable  | Configurable delays to avoid platform detection.    |
-| **Punctuation Bypass** | ✅ Stable  | Aggressive HTML decoding to ignore symbols.        |
+| Feature | Status | Description |
+| :--- | :--- | :--- |
+| **Single Fill-in** | ✅ Stable | Single text input detection and entry. |
+| **Standard MCQ** | ✅ Stable | Radio button selection and auto-submit. |
+| **Fuzzy Matching** | ✅ Stable | Prevents duplicate header collision errors using Levenshtein. |
+| **Multi Fill-in/Select** | ✅ Stable | Supports multiple inputs and dropdowns per slide. |
+| **Variable Timing** | ✅ Stable | Configurable delays to avoid platform detection. |
+| **Punctuation Bypass** | ✅ Stable | Aggressive HTML decoding to ignore symbols and periods. |
+| **Settings Menu** | 🏗️ In Progress | UI for adjusting speed, modes, and injection logic. |
+| **Human-Like Typing** | ⏳ Planned | Character-by-character input simulation with variable speed. |
+| **Auto-Retry Engine** | ⏳ Planned | Logic to detect failed XML fetches and refresh the task. |
+| **Competition Analyst** | ⏳ Planned | Integrated market share and economic data for specific modules. |
+| **Dashboard** | ⏳ Planned | Live session stats (Total cracked, accuracy, time saved). |
+| **On-site Support** | ⏳ Planned | Integrated "Debug Overlay" for manual matching if fuzzy logic fails. |
 
 ---
 
