@@ -37,7 +37,7 @@
   // src/config.js
   var MAP = "c3D1RFP9eM[UjINfOZi0Qg+mhkxSJ5p* uX8B}`-rs,LqAH@lnbVT.C{z4YWtGv72^/aw|do_6\\yE~]K";
   var TIMEOUT = () => {
-    const DEFAULT = 10;
+    const DEFAULT = 100;
     let t = (localStorage == null ? void 0 : localStorage.AUTOEB_TIMEOUT) || DEFAULT;
     if (Number.isNaN(parseInt(t))) {
       if (t == null ? void 0 : t.startsWith("random.")) {

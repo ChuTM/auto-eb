@@ -10,7 +10,7 @@ export const JUNK_KEYWORDS = new Set([
 ]);
 
 export const TIMEOUT = () => {
-	const DEFAULT = 10;
+	const DEFAULT = 100;
 	let t = localStorage?.AUTOEB_TIMEOUT || DEFAULT;
 	if (Number.isNaN(parseInt(t))) {
 		// random.1000.25000 (in ms)
