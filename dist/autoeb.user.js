@@ -79,32 +79,49 @@
     return result;
   }
   function decodeHtml(html) {
+    if (!html) return "";
     const doc = new DOMParser().parseFromString(html, "text/html");
-    const decoded = doc.documentElement.textContent;
-    return decoded.replace(/[^a-zA-Z0-9]/g, "");
+    const textContent = doc.documentElement.textContent || "";
+    return textContent.toLowerCase().replace(/[^a-z0-9]/g, "").trim();
   }
-  function addToLog2(m) {
-    console.log(m);
-  }
-  function addToTable(t) {
-    console.table(t);
+  function addToLog2(m, type = "INFO") {
+    const color = type === "DEV" ? "color: #00ff00" : "color: #ffffff";
+    console.log(`%c[Auto EB][${type}] ${m}`, color);
   }
 
   // src/logic.js
-  document.addEventListener("DOMContentLoaded", () => {
-    console.log("[Auto EB] Plugin Ready.");
-  });
+  function getIframeContext() {
+    var _a, _b;
+    const overlay = (_a = document.querySelector(".overlay-player")) == null ? void 0 : _a.contentDocument;
+    return (_b = overlay == null ? void 0 : overlay.querySelector("iframe")) == null ? void 0 : _b.contentDocument;
+  }
+  function getSimilarity(s1, s2) {
+    if (!s1 || !s2) return 0;
+    if (s1 === s2) return 1;
+    let longer = s1.length > s2.length ? s1 : s2;
+    let shorter = s1.length > s2.length ? s2 : s1;
+    const costs = new Array();
+    for (let i = 0; i <= longer.length; i++) {
+      let lastValue = i;
+      for (let j = 0; j <= shorter.length; j++) {
+        if (i === 0) costs[j] = j;
+        else if (j > 0) {
+          let newValue = costs[j - 1];
+          if (longer.charAt(i - 1) !== shorter.charAt(j - 1))
+            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+          costs[j - 1] = lastValue;
+          lastValue = newValue;
+        }
+      }
+      if (i > 0) costs[shorter.length] = lastValue;
+    }
+    return (longer.length - costs[shorter.length]) / parseFloat(longer.length);
+  }
   function getXMLData() {
     return __async(this, null, function* () {
-      const overlay = document.querySelector(".overlay-player");
-      if (!(overlay == null ? void 0 : overlay.contentDocument)) throw new Error("Overlay player not found");
-      const iframe = overlay.contentDocument.querySelector("iframe");
-      if (!(iframe == null ? void 0 : iframe.contentDocument)) throw new Error("Course iframe not found");
-      const iframeSrc = iframe.contentDocument.location.href;
-      const baseURL = iframeSrc.substring(0, iframeSrc.lastIndexOf("/"));
-      console.log(`Compiled course data: ${baseURL}/course/course_pc.exml`);
-      const res = yield fetch(`${baseURL}/course/course_pc.exml`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const iframe = getIframeContext();
+      if (!iframe) throw new Error("Course iframe not found");
+      const res = yield fetch(iframe.location.href.substring(0, iframe.location.href.lastIndexOf("/")) + "/course/course_pc.exml");
       return yield res.text();
     });
   }
@@ -115,118 +132,97 @@
   function crackCourse() {
     return __async(this, null, function* () {
       try {
-        const xml = yield getXMLData();
-        const seed = getSeedFromXML(xml);
-        const questionMatches = [
-          ...xml.matchAll(/<question[^>]*?>([\s\S]*?)<\/question>/g)
-        ];
-        return questionMatches.map((match, index) => {
-          var _a, _b;
-          const fullTag = match[0];
-          const block = match[1];
-          const typeMatch = fullTag.match(/type="([^"]*)"/);
-          const qType = typeMatch ? typeMatch[1] : "unknown";
-          let qText = "";
-          let answer = "N/A";
-          if (qType === "fillin") {
-            const sets = [...block.matchAll(/<text[^>]*?text="([^"]*)"/g)];
-            qText = sets.map((s) => s[1].trim().toLowerCase().replace(/\s+/g, "")).join(" | ");
-            const correctMatch = block.match(/correct="([^"]*)"/);
-            if (correctMatch) {
-              answer = decrypt(correctMatch[1], seed);
-              if (answer.includes("/")) answer = answer.split("/")[0];
-            }
-          } else {
-            qText = ((_a = fullTag.match(/text="([^"]*)"/)) == null ? void 0 : _a[1]) || `Question ${index + 1}`;
-            qText = qText.toLowerCase().replace(/\s+/g, "");
-            let correctValue = (_b = fullTag.match(/correct="([^"]*)"/)) == null ? void 0 : _b[1];
-            if (correctValue) {
-              if (correctValue.length === 1 && /[A-Z]/.test(correctValue)) {
-                const letterIndex = correctValue.charCodeAt(0) - 65;
-                const answers = [
-                  ...block.matchAll(/<answer[^>]*?text="([^"]*)"/g)
-                ];
-                answer = answers[letterIndex] ? answers[letterIndex][1] : decrypt(correctValue, seed);
-              } else {
-                answer = decrypt(correctValue, seed);
-              }
+        const xmlString = yield getXMLData();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+        const seed = getSeedFromXML(xmlString);
+        const questions = xmlDoc.querySelectorAll("question");
+        return Array.from(questions).map((q, index) => {
+          var _a;
+          const answers = [];
+          q.querySelectorAll("[correct]").forEach((node) => {
+            let val = decrypt(node.getAttribute("correct"), seed);
+            answers.push((val == null ? void 0 : val.includes("/")) ? val.split("/")[0] : val);
+          });
+          const qType = q.getAttribute("type");
+          if (qType === "smc" && answers.length === 0) {
+            const correctVal = q.getAttribute("correct");
+            if (correctVal && /[A-Z]/.test(correctVal)) {
+              const options = q.querySelectorAll("answer");
+              answers.push(((_a = options[correctVal.charCodeAt(0) - 65]) == null ? void 0 : _a.getAttribute("text")) || decrypt(correctVal, seed));
             }
           }
-          return { question: qText, answer };
+          const bodyText = Array.from(q.querySelectorAll("set")).map((s) => decodeHtml(s.textContent)).join("");
+          const headerText = decodeHtml(q.getAttribute("text") || "");
+          return { type: qType, headerText, bodyText, answers };
         });
       } catch (err) {
-        console.error("\u274C Crack failed:", err.message);
         return [];
       }
     });
   }
-  function getAllInput() {
-    return __async(this, null, function* () {
-      var _a, _b;
-      const overlay = (_a = document.querySelector(".overlay-player")) == null ? void 0 : _a.contentDocument;
-      const iframe = (_b = overlay == null ? void 0 : overlay.querySelector("iframe")) == null ? void 0 : _b.contentDocument;
-      return iframe ? iframe.querySelectorAll("input") : [];
-    });
-  }
-  function getCurrentQuestionText() {
-    var _a, _b, _c;
-    try {
-      const player = (_a = document.querySelector(".overlay-player")) == null ? void 0 : _a.contentDocument;
-      const course = (_b = player == null ? void 0 : player.querySelector("body > #course")) == null ? void 0 : _b.contentDocument;
-      const entry = (course == null ? void 0 : course.querySelector("question-smc")) || (course == null ? void 0 : course.querySelector("question-fillin"));
-      if (course == null ? void 0 : course.querySelector("question-fillin"))
-        (_c = entry == null ? void 0 : entry.querySelector(".c_question-head")) == null ? void 0 : _c.remove();
-      return (entry == null ? void 0 : entry.innerText.trim().toLowerCase().replace(/\s+/g, "")) || "";
-    } catch (e) {
-      return "";
-    }
-  }
   function showAnswerForCurrentQuestion() {
     return __async(this, null, function* () {
+      var _a, _b;
       const allQuestions = yield crackCourse();
-      if (allQuestions.length === 0) return false;
-      const currentText = getCurrentQuestionText().trim().replaceAll("\n", "");
-      if (!currentText) return false;
-      const found = allQuestions.find(
-        (q) => q.question === currentText || decodeHtml(q.question).includes(decodeHtml(currentText)) || decodeHtml(currentText).includes(decodeHtml(q.question))
-      );
-      if (found) {
-        const inputs = yield getAllInput();
-        if (!inputs || inputs.length === 0) return false;
-        if (inputs.length === 1 && inputs[0].type === "text") {
-          inputs[0].value = found.answer;
-          inputs[0].dispatchEvent(new Event("input", { bubbles: true }));
-          return true;
+      const iframe = getIframeContext();
+      if (!iframe || allQuestions.length === 0) return false;
+      const uiHead = decodeHtml(((_a = iframe.querySelector(".c_question-head")) == null ? void 0 : _a.innerText) || "");
+      const uiBody = decodeHtml(((_b = iframe.querySelector(".c_question-body")) == null ? void 0 : _b.innerText) || "");
+      const inputs = iframe.querySelectorAll("input, select");
+      addToLog2(`UI Body: ${uiBody.slice(0, 50)}...`, "DEV");
+      let found = null;
+      let bestScore = 0;
+      allQuestions.forEach((q) => {
+        if (!q.bodyText) return;
+        const score = getSimilarity(uiBody, q.bodyText);
+        if (score > bestScore) {
+          bestScore = score;
+          found = q;
         }
-        if (inputs[0].type === "radio") {
-          const idx = parseInt(found.answer) - 1;
-          if (inputs[idx]) {
-            inputs[idx].checked = true;
-            inputs[idx].dispatchEvent(
-              new Event("change", { bubbles: true })
-            );
-            return true;
-          }
-        }
+      });
+      if (bestScore < 0.7) {
+        addToLog2("Body match weak, trying Header matching...", "DEV");
+        found = allQuestions.find((q) => uiHead.includes(q.headerText) || q.headerText.includes(uiHead));
+      } else {
+        addToLog2(`Body Match Success (${(bestScore * 100).toFixed(1)}%)`, "DEV");
       }
-      addToLog2("\u274C No matching question found");
-      addToTable(allQuestions);
+      if (found && found.answers.length > 0) {
+        found.answers.forEach((ans, i) => {
+          const el = inputs[i];
+          if (!el) return;
+          if (el.tagName === "SELECT") {
+            el.value = ans;
+            el.dispatchEvent(new Event("change", { bubbles: true }));
+          } else if (el.type === "radio") {
+            const idx = parseInt(ans) - 1;
+            const radios = iframe.querySelectorAll('input[type="radio"]');
+            if (radios[idx]) {
+              radios[idx].checked = true;
+              radios[idx].dispatchEvent(new Event("change", { bubbles: true }));
+            }
+          } else {
+            el.value = ans;
+            el.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+        });
+        return true;
+      }
+      addToLog2("\u274C No unique match found.", "DEV");
+      return false;
     });
   }
   function startAutomation() {
     showAnswerForCurrentQuestion().then((success) => {
-      var _a, _b, _c;
       if (success) {
-        const iframe = (_c = (_b = (_a = document.querySelector(".overlay-player")) == null ? void 0 : _a.contentDocument) == null ? void 0 : _b.querySelector("iframe")) == null ? void 0 : _c.contentDocument;
-        const submitBtn = iframe == null ? void 0 : iframe.querySelector("button[btn-for='submit']");
+        const iframe = getIframeContext();
         setTimeout(() => {
-          submitBtn == null ? void 0 : submitBtn.click();
+          var _a;
+          (_a = iframe == null ? void 0 : iframe.querySelector("button[btn-for='submit']")) == null ? void 0 : _a.click();
           setTimeout(() => {
             var _a2;
             (_a2 = iframe == null ? void 0 : iframe.querySelector("button[btn-for='next']")) == null ? void 0 : _a2.click();
-            if ((localStorage == null ? void 0 : localStorage.avoidContinuousAnswering) !== "AVOID") {
-              setTimeout(startAutomation, TIMEOUT());
-            }
+            if ((localStorage == null ? void 0 : localStorage.avoidContinuousAnswering) !== "AVOID") setTimeout(startAutomation, TIMEOUT());
           }, TIMEOUT());
         }, TIMEOUT());
       }

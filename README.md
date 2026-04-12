@@ -1,7 +1,6 @@
 # 📖 Auto EB
 
-**Complete your EB tasks in seconds.**  
-`Auto EB` is a high-efficiency automation engine designed to parse, decrypt, and solve Wiseman LMS tasks automatically.
+**Complete your EB tasks in seconds.** `Auto EB` is a high-efficiency automation engine designed to parse, decrypt, and solve Wiseman LMS tasks automatically using fuzzy string matching and DOM injection.
 
 ---
 
@@ -36,62 +35,31 @@ Safari requires a third-party app to run userscripts. Download one of the follow
 * Find your chosen manager (e.g., "Userscripts") and **check the box** to enable it.
 * **Note for iOS:** Go to Settings > Safari > Extensions to enable it there.
 
-#### 3. Configure the Extension Permissions
-* While in the Extensions menu, click on the manager.
-* Ensure "Allow" or "Always Allow on Every Website" is selected so the script can run on the Wiseman EB page.
-
-### 4. Install the Script
+#### 3. Install the Script
 * **Method A (Automatic):** Click this link: [autoeb.user.js](https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js). Safari should prompt you to "Install" or "Create" the script automatically.
-* **Method B (Manual):** * Open the [raw script code](https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js) and copy everything.
-    * Open your Userscript manager's dashboard/editor.
-    * Create a **New Script**, paste the code, and save.
-
-#### 5. Activate on Wiseman EB
-* Navigate to the Wiseman EB lesson page.
-* You may need to refresh the page once.
-* Click the **"Activate Auto EB"** button that appears on the interface.
+* **Method B (Manual):** Open the [raw script code](https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js) and copy everything. Paste it into your manager's dashboard and save.
 
 ---
 
 ### For All Other Browsers (Chrome, Edge, Firefox, Brave)
 
 #### 1. Install Tampermonkey
-Visit the **[Tampermonkey Official Website](https://www.tampermonkey.net/)** and install the extension for your specific browser.
+Visit the **[Tampermonkey Official Website](https://www.tampermonkey.net/)** and install the extension.
 
 #### 2. Configure Browser Settings
-To allow custom scripts to run, you must adjust your browser's security settings:
-* **Enable Developer Mode:** Go to your Extensions page (`chrome://extensions` or `edge://extensions`) and toggle **Developer Mode** to **ON**.
-* **Allow User Scripts:**
-    1.  In your browser's Extension settings, click **Details** under Tampermonkey.
-    2.  Find the toggle for **"Allow access to file URLs"** and turn it **ON**.
-    3.  (For Chrome/Edge) Look for the **"Allow user scripts"** setting and ensure it is enabled to prevent the browser from blocking the script execution.
+* **Enable Developer Mode:** Go to your Extensions page and toggle **Developer Mode** to **ON**.
+* **Allow User Scripts:** In Tampermonkey details, enable **"Allow access to file URLs"**. (For Chrome/Edge) ensure **"Allow user scripts"** is enabled in the extension settings to prevent blocking.
 
 #### 3. Install the Script
-* **Automatic Install:** Open the [autoeb.user.js](https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js) link. Tampermonkey will open a new tab; click **Install**.
-* **Manual Install:**
-    1.  Copy the full code from the [source link](https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js).
-    2.  Click the Tampermonkey icon in your toolbar and select **Create a new script**.
-    3.  Paste the code and select **File > Save**.
-
-#### 4. Activate on Wiseman EB
-1.  Navigate to the **Wiseman EB lesson page**.
-2.  Click the **"Activate Auto EB"** button that appears on the interface.
+* Open the [autoeb.user.js](https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js) link and click **Install**.
 
 --- 
 
 ### For Developers (Build from Source)
 
-If you want to modify the logic or the cipher:
-
-1. **Install Dependencies**:
-    ```bash
-    npm install
-    ```
-2. **Build**:
-    ```bash
-    node build.mjs
-    ```
-    _This bundles the source files into a single IIFE script in the `dist` folder._
+1. **Install Dependencies**: `npm install`
+2. **Build**: `node build.mjs`  
+   _This bundles source files into a single IIFE script in the `dist` folder._
 
 ---
 
@@ -100,15 +68,40 @@ If you want to modify the logic or the cipher:
 The engine operates through a coordinated four-stage pipeline:
 
 1.  **Extraction**: Locates the active course `iframe` and fetches the underlying `course_pc.exml` dataset.
-2.  **Analysis**: Parses the XML structure to map question types (fill-in/MCQ) and retrieve the encryption `seed`.
-3.  **Decryption**: Processes obfuscated strings using a custom Caesar-style shift against a specific internal `MAP` cipher.
-4.  **Injection**: Matches the current DOM state to the decrypted database, autofills values, and programmatically triggers `submit` and `next` events.
+2.  **Fuzzy Analysis**: Parses the XML structure. Unlike standard matchers, Auto EB builds a **Body Fingerprint** using text fragments from the `<set>` tags to distinguish between questions with identical headers.
+3.  **Similarity Engine**: Uses a Levenshtein-based similarity algorithm in `utils.js` to compare the current UI text with the decrypted XML database. A match is only confirmed if the similarity score is $> 0.7$ (70%).
+4.  **Decryption & Injection**: Processes obfuscated strings using a custom Caesar-style shift and programmatically triggers DOM events for seamless automation.
 
-### The Decryption Logic
+### Pipeline Flowchart
 
-The core security relies on a character mapping shift. The decryption function calculates a shifted index based on the character code and a dynamic seed value $s$:
+```mermaid
+graph TD
+    A[1. Extraction: Locate iframe and fetch EXML dataset]
+    B(2. Analysis: Map question types and retrieve seed)
+    
+    A --> B
+    
+    C{3. Fuzzy Matching: Compare Body with XML via Levenshtein}
+    
+    B --> C
+    
+    C -- "High Confidence (>0.7)" --> D
+    C -- "Low Confidence (<=0.7)" --> E
 
-$$s = (index_{base} + i + seed) \pmod{80}$$
+    E[4. Standard Logic: Match via Question Header]
+    E --> D
+
+    D[5. Decryption & Injection: Process Cipher and Fill DOM]
+    F[6. Automation Flow: Trigger Submit and Next events]
+
+    D --> F
+
+    classDef step fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000;
+    classDef decision fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000;
+    
+    class A,B,D,E,F step;
+    class C decision;
+```
 
 ---
 
@@ -116,24 +109,24 @@ $$s = (index_{base} + i + seed) \pmod{80}$$
 
 | Feature                      | Status     | Description                                        |
 | :--------------------------- | :--------- | :------------------------------------------------- |
-| **Single Fill-in**           | ✅ Stable  | Single text input detection and entry.             |
-| **Standard MCQ**             | ✅ Stable  | Radio button selection and auto-submit.            |
-| **Multiple Fill-in** | ⏳ Planned | Handling arrays of text inputs within one slide.   |
-| **Variable Answering Time** | ✅ Taking Shape | Avoid being logged and suspected by your teacher. |
-| **Single/Multiple Dropdown Questions** | ⏳ Planned | Identify multiple or single dropdown menus. |
+| **Single Fill-in** | ✅ Stable  | Single text input detection and entry.             |
+| **Standard MCQ** | ✅ Stable  | Radio button selection and auto-submit.            |
+| **Fuzzy Matching** | ✅ Stable  | Prevents duplicate header collision errors.         |
+| **Multi Fill-in/Select** | ✅ Stable  | Supports multiple inputs and dropdowns per slide.   |
+| **Variable Timing** | ✅ Stable  | Configurable delays to avoid platform detection.    |
+| **Punctuation Bypass** | ✅ Stable  | Aggressive HTML decoding to ignore symbols.        |
 
 ---
 
 ## 📂 Project Structure
 
 ```text
-├── dist/                # Compiled Userscript (Ready for Tampermonkey)
+├── dist/                # Compiled Userscript
 ├── src/                 # Modular Source Code
 │   ├── config.js        # Global constants & Cipher MAP
-│   ├── header.js        # Tampermonkey metadata block
-│   ├── logic.js         # DOM scraping & automation flow
+│   ├── logic.js         # Fuzzy matching & automation flow
 │   ├── main.js          # UI Entry point (The "Activate" button)
-│   └── utils.js         # Decryption engine & HTML sanitizers
+│   └── utils.js         # Decryption engine & Similarity logic
 ├── build.mjs            # ESBuild configuration script
 └── package.json         # Build dependencies
 ```
@@ -142,5 +135,4 @@ $$s = (index_{base} + i + seed) \pmod{80}$$
 
 ## ⚠️ Disclaimer
 
-**For Educational Purposes Only.**  
-This project is a proof-of-concept demonstrating how client-side obfuscation can be bypassed. The authors are not responsible for any misuse, academic consequences, or account bans. Please use this tool responsibly and respect your institution's academic integrity policies.
+**For Educational Purposes Only.** This project is a proof-of-concept demonstrating how client-side obfuscation can be bypassed. The authors are not responsible for any misuse, academic consequences, or account bans. Please use this tool responsibly.
