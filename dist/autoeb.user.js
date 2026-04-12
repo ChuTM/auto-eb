@@ -5,11 +5,8 @@
 // @description  Complete your EB tasks in seconds.
 // @author       ReTrn.
 // @grant        GM_xmlhttpRequest
-// @grant        GM_addStyle
-// @grant        GM_getResourceText
 // @require      https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js
 // @require      https://alb-cdn.web.app/popupjs/pu.min.js
-// @resource PRISM_CSS https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css
 // @run-at       document-end
 // @match        https://*.wiseman.com.hk/*
 // @updateURL    https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js
@@ -239,13 +236,17 @@
   // src/main.js
   (function() {
     document.body.classList.add("homepage");
-    const prismStyles = GM_getResourceText("PRISM_CSS");
-    if (prismStyles) GM_addStyle(prismStyles);
+    document.createElement("link");
+    let prism_style = document.createElement("link");
+    prism_style.rel = "stylesheet";
+    prism_style.href = "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css";
+    document.head.appendChild(prism_style);
     let popup_style = document.createElement("link");
     popup_style.rel = "stylesheet";
     popup_style.href = "https://alb-cdn.web.app/popupjs/pu.min.css";
     document.head.appendChild(popup_style);
-    GM_addStyle(`
+    let custom_style_tag = document.createElement("style");
+    custom_style_tag.innerHTML = `
     .pujs-poAlert {
         z-index: 9999999999;
     }
@@ -282,7 +283,8 @@
         margin: 0 !important;
         padding: 0 !important;
     }
-    `);
+    `;
+    document.head.appendChild(custom_style_tag);
     let start_autofill = document.createElement("button");
     start_autofill.innerText = "Activate Auto EB";
     start_autofill.addEventListener("click", startAutomation);
