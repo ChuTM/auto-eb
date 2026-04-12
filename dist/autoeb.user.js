@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Auto EB
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.21
 // @description  Complete your EB tasks in seconds.
 // @author       ReTrn.
 // @grant        GM_xmlhttpRequest
@@ -88,13 +88,6 @@
     const color = type === "DEV" ? "color: #00ff00" : "color: #ffffff";
     console.log(`%c[Auto EB][${type}] ${m}`, color);
   }
-
-  // src/logic.js
-  function getIframeContext() {
-    var _a, _b;
-    const overlay = (_a = document.querySelector(".overlay-player")) == null ? void 0 : _a.contentDocument;
-    return (_b = overlay == null ? void 0 : overlay.querySelector("iframe")) == null ? void 0 : _b.contentDocument;
-  }
   function getSimilarity(s1, s2) {
     if (!s1 || !s2) return 0;
     if (s1 === s2) return 1;
@@ -116,6 +109,13 @@
       if (i > 0) costs[shorter.length] = lastValue;
     }
     return (longer.length - costs[shorter.length]) / parseFloat(longer.length);
+  }
+
+  // src/logic.js
+  function getIframeContext() {
+    var _a, _b;
+    const overlay = (_a = document.querySelector(".overlay-player")) == null ? void 0 : _a.contentDocument;
+    return (_b = overlay == null ? void 0 : overlay.querySelector("iframe")) == null ? void 0 : _b.contentDocument;
   }
   function getXMLData() {
     return __async(this, null, function* () {

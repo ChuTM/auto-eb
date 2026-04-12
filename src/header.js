@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Auto EB
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.21
 // @description  Complete your EB tasks in seconds.
 // @author       ReTrn.
 // @grant        GM_xmlhttpRequest
