@@ -27,7 +27,7 @@ Watch [attachments/tutorial.mp4](attachments/tutorial.mp4).
 
 #### 1. Install a Userscript Manager
 Safari requires a third-party app to run userscripts. Download one of the following from the App Store:
-* **Userscripts** (Highly recommended, free, and open-source).
+* **[Userscripts](https://apps.apple.com/us/app/userscripts/id1463298887)** (Highly recommended, free, and open-source).
 * **Tampermonkey for Safari** (Paid).
 
 #### 2. Enable the Extension
