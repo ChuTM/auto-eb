@@ -1,4 +1,5 @@
 import { MAP } from "./config.js";
+import { getIframeContext } from "./logic.js";
 
 export function decrypt(encoded, seed) {
 	if (!encoded) return "N/A";
@@ -28,14 +29,14 @@ export function decrypt(encoded, seed) {
  * 4. Removes all whitespace.
  */
 export function decodeHtml(html) {
-    if (!html) return "";
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    const textContent = doc.documentElement.textContent || "";
-    return textContent
-        .toLowerCase()
-        .replace(/\s+/g, ' ') // Collapse multiple spaces/newlines into one space
-        .replace(/[^a-z0-9 ]/g, "") // Keep letters, numbers, AND spaces
-        .trim();
+	if (!html) return "";
+	const doc = new DOMParser().parseFromString(html, "text/html");
+	const textContent = doc.documentElement.textContent || "";
+	return textContent
+		.toLowerCase()
+		.replace(/\s+/g, " ") // Collapse multiple spaces/newlines into one space
+		.replace(/[^a-z0-9 ]/g, "") // Keep letters, numbers, AND spaces
+		.trim();
 }
 
 export function addToLog(m, type = "INFO") {
@@ -69,4 +70,28 @@ export function getSimilarity(s1, s2) {
 
 export function addToTable(t) {
 	console.table(t);
+}
+
+export function getCorrectArray(question_count, correct_target) {
+	// 12 questions, 8 correct
+	// e.g. [true, true, false, ...] randomly
+	const arr = [];
+	// Fill with correct (true) and incorrect (false) values
+	for (let i = 0; i < correct_target; i++) {
+		arr.push(true);
+	}
+	for (let i = correct_target; i < question_count; i++) {
+		arr.push(false);
+	}
+	// Fisher-Yates shuffle to randomize
+	for (let i = arr.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[arr[i], arr[j]] = [arr[j], arr[i]];
+	}
+	return arr;
+}
+
+export function getQuestionCount() {
+	return getIframeContext().documentElement.querySelector("group-pagination")
+		.childElementCount;
 }

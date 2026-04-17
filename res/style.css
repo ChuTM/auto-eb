@@ -1,0 +1,165 @@
+.pujs-poAlert {
+	z-index: 9999999999;
+}
+.pujs-poAlert::-webkit-scrollbar,
+.pujs-poAlert *::-webkit-scrollbar {
+	display: none;
+}
+.homepage .auto-eb-hidden {
+	display: none;
+}
+#xml-container {
+	padding: 15px !important;
+	background: #2d2d2d !important;
+	border-radius: 8px;
+	margin: 0 !important;
+	/* CRITICAL: pre-wrap preserves the tabs while allowing horizontal scrolling if needed */
+	white-space: pre !important;
+	overflow: auto !important;
+}
+#xml-block {
+	display: block !important;
+	white-space: pre !important;
+	line-height: 1.4 !important;
+	font-size: 13px !important;
+	/* FORCE TAB SIZE */
+	tab-size: 4 !important;
+	-moz-tab-size: 4 !important;
+	-o-tab-size: 4 !important;
+	font-family: "Consolas", "Monaco", "Courier New", monospace !important;
+	color: #ccc !important;
+}
+/* Stop Prism from messing with the layout */
+pre[class*="language-"] {
+	margin: 0 !important;
+	padding: 0 !important;
+}
+
+.autoeb-overlay {
+	font-size: 16px;
+
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+
+	background: rgba(255, 255, 255, 0.75);
+	backdrop-filter: blur(17px);
+	-webkit-backdrop-filter: blur(17px);
+	z-index: 10000000;
+
+	pointer-events: none;
+	opacity: 0;
+
+	transition: 1s;
+
+	transform: translateY(50%);
+}
+
+.autoeb-overlay .component {
+	width: 95%;
+	background-color: white;
+	margin: 2em auto;
+	padding: 2em;
+	border-radius: 17px;
+	border: 1.5px solid rgba(0, 0, 0, 0.05);
+	box-shadow: 0 4px 10px 0 rgba(0, 0, 0, 0.1);
+}
+
+.autoeb-overlay .component > .title {
+	font-size: 2em;
+	font-weight: 600;
+}
+
+.autoeb-overlay .component .layer {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+
+	.information {
+		padding: 1em 2em;
+		width: 80%;
+		display: flex;
+		flex-direction: column;
+
+		.title {
+			font-size: 1.2em;
+			font-weight: 400;
+			color: rgba(0, 0, 0, 0.6);
+		}
+
+		.description {
+			font-size: 0.8em;
+			font-weight: 400;
+			color: rgba(0, 0, 0, 0.4);
+			display: flex;
+			flex-direction: column;
+		}
+
+		.description > .variable {
+			font-size: 0.6em;
+			width: fit-content;
+			padding: 2px 6px;
+			background: rgba(0, 0, 0, 0.05);
+			border-radius: 5px;
+		}
+	}
+
+	.action {
+		padding: 1em 2em;
+		color: rgba(0, 0, 0, 0.6);
+	}
+
+	input {
+		color: rgba(0, 0, 0, 0.6);
+		border: 1px solid black;
+		border-radius: 3px;
+		padding: 2px 7px;
+	}
+
+	.action {
+		width: 20%;
+		min-width: 200px;
+	}
+	.AUTOEB_AVOID_CONTINUOUS_ANSWERING-descriptive-text {
+		content: "Continuously";
+	}
+	#AUTOEB_AVOID_CONTINUOUS_ANSWERING:checked
+		+ .AUTOEB_AVOID_CONTINUOUS_ANSWERING-descriptive-text {
+		content: "AVOID";
+	}
+}
+
+.autoeb-settings-button {
+	position: fixed;
+	bottom: 2rem;
+	right: 2rem;
+	z-index: 9999999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1em;
+}
+
+.autoeb-settings-button .settings {
+	display: block;
+	width: 24px;
+	height: 24px;
+    cursor: pointer;
+}
+
+.close-button {
+	font-size: 3em;
+	cursor: pointer;
+	color: black;
+	font-weight: 300;
+	position: absolute;
+	top: 2rem;
+	right: 2rem;
+	height: 24px;
+	width: 24px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}

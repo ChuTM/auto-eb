@@ -32,3 +32,11 @@ export const TIMEOUT = () => {
 	}
 	return t;
 }; // Prevent error
+
+export const CORRECT_COUNT = (total) => {
+	const target = localStorage.AUTOEB_CORRECT_TARGET || void 0;
+
+	if (!target || isNaN(parseInt(target))) return total;
+
+	return Math.round(parseFloat(target) * total);
+};

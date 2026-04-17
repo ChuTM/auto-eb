@@ -8,6 +8,7 @@ await esbuild.build({
 	bundle: true,
 	outfile: "dist/autoeb.user.js",
 	banner: { js: header },
+	loader: { ".html": "text", ".css": "text" },
 	format: "iife",
 	target: ["es6"],
 });
