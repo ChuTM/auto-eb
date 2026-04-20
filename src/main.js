@@ -97,7 +97,7 @@ import AUTOEB_STYLE from "../res/style.css";
 	})();
 
 	(function () {
-		document.body.innerHTML += AUTOEB_UI;
+		document.body.insertAdjacentHTML("beforeend", AUTOEB_UI);
 
 		const AVOID_AUTO_CONTINUOUSLY_ANSWER_INTPUT = document.getElementById(
 			"AUTOEB_AVOID_CONTINUOUS_ANSWERING",
@@ -154,8 +154,7 @@ import AUTOEB_STYLE from "../res/style.css";
 				const AUTOEB_OVERLAY =
 					document.querySelector(".autoeb-overlay");
 
-				AUTOEB_OVERLAY.style.transform =
-					"translateY(50%)";
+				AUTOEB_OVERLAY.style.transform = "translateY(50%)";
 				AUTOEB_OVERLAY.style.opacity = "0";
 				AUTOEB_OVERLAY.style.pointerEvents = "none";
 			});
