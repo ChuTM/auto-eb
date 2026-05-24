@@ -21,21 +21,14 @@ export function decrypt(encoded, seed) {
 	return result;
 }
 
-/**
- * Robust text normalization:
- * 1. Converts HTML entities to text.
- * 2. Lowercases everything.
- * 3. Strips ALL punctuation and special characters (keeping only letters and numbers).
- * 4. Removes all whitespace.
- */
 export function decodeHtml(html) {
 	if (!html) return "";
 	const doc = new DOMParser().parseFromString(html, "text/html");
 	const textContent = doc.documentElement.textContent || "";
 	return textContent
 		.toLowerCase()
-		.replace(/\s+/g, " ") // Collapse multiple spaces/newlines into one space
-		.replace(/[^a-z0-9 ]/g, "") // Keep letters, numbers, AND spaces
+		.replace(/\s+/g, " ")
+		.replace(/[^a-z0-9 ]/g, "")
 		.trim();
 }
 
@@ -69,21 +62,15 @@ export function getSimilarity(s1, s2) {
 }
 
 export function addToTable(t) {
-	console.table(t);
+	if (localStorage?.AUTOEB_DEBUG_MODE === "TRUE") {
+		console.table(t);
+	}
 }
 
 export function getCorrectArray(question_count, correct_target) {
-	// 12 questions, 8 correct
-	// e.g. [true, true, false, ...] randomly
 	const arr = [];
-	// Fill with correct (true) and incorrect (false) values
-	for (let i = 0; i < correct_target; i++) {
-		arr.push(true);
-	}
-	for (let i = correct_target; i < question_count; i++) {
-		arr.push(false);
-	}
-	// Fisher-Yates shuffle to randomize
+	for (let i = 0; i < correct_target; i++) arr.push(true);
+	for (let i = correct_target; i < question_count; i++) arr.push(false);
 	for (let i = arr.length - 1; i > 0; i--) {
 		const j = Math.floor(Math.random() * (i + 1));
 		[arr[i], arr[j]] = [arr[j], arr[i]];
@@ -94,4 +81,47 @@ export function getCorrectArray(question_count, correct_target) {
 export function getQuestionCount() {
 	return getIframeContext().documentElement.querySelector("group-pagination")
 		.childElementCount;
+}
+
+/**
+ * Fires a full structural mouse interaction sequence mimicking biological movement
+ */
+export async function simulateClick(el) {
+	if (!el) return;
+	const events = ["pointerdown", "mousedown", "pointerup", "mouseup", "click"];
+	for (const name of events) {
+		const ev = new MouseEvent(name, {
+			bubbles: true,
+			cancelable: true,
+			buttons: 1
+		});
+		el.dispatchEvent(ev);
+		await new Promise((r) => setTimeout(r, Math.floor(Math.random() * 30 + 20)));
+	}
+}
+
+/**
+ * Simulates asynchronous character streams mimicking human keyboard inputs
+ */
+export async function simulateTyping(el, text) {
+	if (!el) return;
+	el.focus();
+	el.value = "";
+	
+	for (let i = 0; i < text.length; i++) {
+		const char = text[i];
+		
+		el.dispatchEvent(new KeyboardEvent("keydown", { key: char, bubbles: true }));
+		el.dispatchEvent(new KeyboardEvent("keypress", { key: char, bubbles: true }));
+		
+		el.value += char;
+		el.dispatchEvent(new Event("input", { bubbles: true }));
+		
+		el.dispatchEvent(new KeyboardEvent("keyup", { key: char, bubbles: true }));
+		
+		await new Promise((r) => setTimeout(r, Math.floor(Math.random() * 60 + 60)));
+	}
+	
+	el.dispatchEvent(new Event("change", { bubbles: true }));
+	el.blur();
 }

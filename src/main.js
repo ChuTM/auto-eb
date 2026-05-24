@@ -5,169 +5,156 @@ import AUTOEB_UI from "../res/ui.html";
 import AUTOEB_STYLE from "../res/style.css";
 
 (function () {
-	sessionStorage.AUTOEB_VERSION = "1.30"; // VERSIONING
+	sessionStorage.AUTOEB_VERSION = "1.50";
 
-	(function () {
-		document.body.classList.add("homepage");
-		document.createElement("link");
-		let prism_style = document.createElement("link");
-		prism_style.rel = "stylesheet";
-		prism_style.href =
-			"https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css";
-		document.head.appendChild(prism_style);
+	// Append Popup styles to main head context to satisfy core UI dependency check
+	const mainStyle = document.createElement("link");
+	mainStyle.rel = "stylesheet";
+	mainStyle.href = "https://alb-cdn.web.app/popupjs/pu.min.css";
+	document.head.appendChild(mainStyle);
 
-		// Append Popup Styles
-		let popup_style = document.createElement("link");
-		popup_style.rel = "stylesheet";
-		popup_style.href = "https://alb-cdn.web.app/popupjs/pu.min.css";
-		document.head.appendChild(popup_style);
-	})();
+	const pujs_script = document.createElement("script");
+	pujs_script.src = "https://alb-cdn.web.app/popupjs/pu.min.js";
+	document.body.appendChild(pujs_script);
 
-	(function () {
-		let custom_style_tag = document.createElement("style");
-		custom_style_tag.innerHTML = AUTOEB_STYLE;
+	const prism_script = document.createElement("script");
+	prism_script.src = "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js";
+	document.body.appendChild(prism_script);
 
-		document.head.appendChild(custom_style_tag);
-		document.head.innerHTML += `<meta name="viewport" content="width=device-width, initial-scale=1">`;
-	})();
+	// Initializing isolated UI encapsulation context (Shadow DOM)
+	const host = document.createElement("div");
+	host.style.position = "fixed";
+	host.style.zIndex = "2147483647";
+	document.body.appendChild(host);
+	const shadow = host.attachShadow({ mode: "closed" });
 
-	(function () {
-		let start_autofill = document.createElement("button");
-		start_autofill.innerText = "Activate Auto EB";
-		start_autofill.addEventListener("click", startAutomation);
-		start_autofill.style = `position: fixed;z-index: 10000;background: white;padding: 0.5rem 1rem;border-radius: 11px;box-shadow: 0 0 10px 0px #00000035;margin: 1rem;cursor: pointer;`;
-		start_autofill.classList.add("auto-eb-hidden");
-		document.body.appendChild(start_autofill);
+	const appendStyleLink = (href) => {
+		let link = document.createElement("link");
+		link.rel = "stylesheet";
+		link.href = href;
+		shadow.appendChild(link);
+	};
 
-		let getAllAnswers = document.createElement("button");
-		getAllAnswers.innerText = "Get Source XML";
-		getAllAnswers.classList.add("auto-eb-hidden");
-		getAllAnswers.addEventListener("click", () => {
-			getXMLData().then(async (data) => {
-				addToLog("Original Data Received");
+	appendStyleLink("https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css");
+	appendStyleLink("https://alb-cdn.web.app/popupjs/pu.min.css");
 
-				const xmlString = await getXMLData();
-				const regex = /correct="(.*?)"/g;
-				const seed = getSeedFromXML(xmlString);
+	let custom_style_tag = document.createElement("style");
+	custom_style_tag.innerHTML = AUTOEB_STYLE;
+	shadow.appendChild(custom_style_tag);
 
-				const updatedXml = xmlString.replace(regex, (match, p1) => {
-					const decrypted = decrypt(p1, seed);
-					return `correct="${decrypted}"`;
-				});
+	const container = document.createElement("div");
+	container.innerHTML = AUTOEB_UI;
+	shadow.appendChild(container);
 
-				// LOGGING CHECK: Verify tabs exist in console
-				addToLog(updatedXml);
+	let start_autofill = document.createElement("button");
+	start_autofill.innerText = "Activate Auto EB";
+	start_autofill.className = "auto-eb-hidden";
+	start_autofill.style.cssText = `position: fixed; bottom: 2rem; left: 2rem; background: white; padding: 0.5rem 1rem; border-radius: 11px; box-shadow: 0 0 10px 0px #00000035; cursor: pointer; display: block; font-family: sans-serif; font-weight: bold; transition: all 0.2s ease;`;
+	
+	start_autofill.addEventListener("click", (e) => {
+		// Reflect runtime lifecycle change on the primary action trigger
+		start_autofill.innerText = "Auto EB is running...";
+		start_autofill.style.background = "#2e7d32";
+		start_autofill.style.color = "#ffffff";
+		start_autofill.style.cursor = "default";
+		start_autofill.disabled = true;
 
-				pujs.pullOut(
-					`
-                <div style="display: flex; flex-direction: column; width: 100%; height: 100%;">
-                    <center style="color:white; margin-bottom:10px; font-family: sans-serif;">Decrypted Source XML</center>
-                    <pre class="language-xml" id="xml-container"><code id="xml-block" class="language-xml"></code></pre>
-                </div>
-                `,
-					true,
-					{ closeButton: true },
-				);
+		// Propagate state variables directly into the parameters interface
+		const statusTextElement = shadow.querySelector(".autoeb-status-text");
+		if (statusTextElement) {
+			statusTextElement.innerText = "Status: Auto EB is running...";
+			statusTextElement.style.color = "#4caf50";
+		}
 
-				// CLEANING: Only remove excessive blank lines, leave indentation alone
-				const cleanedXml = updatedXml
-					.replace(/\r\n/g, "\n")
-					.replace(/^\n{2,}/g, "\n")
-					.trim();
+		startAutomation(e);
+	});
+	shadow.appendChild(start_autofill);
 
-				setTimeout(() => {
-					const xml_block = document.getElementById("xml-block");
-					if (xml_block) {
-						// Set content as text to escape tags, then force highlight
-						xml_block.textContent = cleanedXml;
-						xml_block.className = "language-xml";
+	let getAllAnswers = document.createElement("button");
+	getAllAnswers.innerText = "Avoid Detection,\nInteract with page first.\nGet Decrypted XML";
+	getAllAnswers.style.cssText = `position: fixed; left: 2rem; bottom: 5rem; cursor: pointer; text-decoration: underline; background: transparent; border: none; color: #0066cc; font-family: sans-serif;`;
+	getAllAnswers.addEventListener("click", () => {
+		getXMLData().then(async (data) => {
+			addToLog("Original Data Received");
 
-						try {
-							Prism.highlightElement(xml_block);
-						} catch (e) {
-							console.error("Highlight Error:", e);
-						}
+			const xmlString = await getXMLData();
+			const regex = /correct="(.*?)"/g;
+			const seed = getSeedFromXML(xmlString);
+
+			const updatedXml = xmlString.replace(regex, (match, p1) => {
+				const decrypted = decrypt(p1, seed);
+				return `correct="${decrypted}"`;
+			});
+
+			addToLog(updatedXml);
+
+			pujs.pullOut(
+				`
+				<div style="display: flex; flex-direction: column; width: 100%; height: 100%; overflow-x: scroll;">
+					<center style="color:white; margin-bottom:10px; font-family: sans-serif;">Decrypted Source XML</center>
+					<pre class="language-xml" id="xml-container"><code id="xml-block" class="language-xml"></code></pre>
+				</div>
+				`,
+				true,
+				{ closeButton: true },
+			);
+
+			const cleanedXml = updatedXml.replace(/\r\n/g, "\n").replace(/^\n{2,}/g, "\n").trim();
+
+			setTimeout(() => {
+				document.querySelector(".pujs-poAlert").style.zIndex = "9999999999";
+				const xml_block = document.getElementById("xml-block");
+				if (xml_block) {
+					xml_block.textContent = cleanedXml;
+					xml_block.className = "language-xml";
+					try {
+						window.Prism.highlightElement(xml_block);
+					} catch (e) {
+						console.error("Highlight Error:", e);
 					}
-				}, 10); // Slight delay for the popup DOM to settle
-			});
+				}
+			}, 10);
 		});
-		getAllAnswers.style = `position: fixed;z-index: 10000;margin: 1rem;top: 3.5rem;cursor: pointer;text-decoration: underline;`;
+	});
+	shadow.appendChild(getAllAnswers);
 
-		document.body.appendChild(getAllAnswers);
-	})();
+	const AVOID_AUTO_CONTINUOUS_RETRY = shadow.getElementById("AUTOEB_AVOID_CONTINUOUS_ANSWERING");
+	AVOID_AUTO_CONTINUOUS_RETRY.addEventListener("change", () => {
+		if (AVOID_AUTO_CONTINUOUS_RETRY.checked) {
+			localStorage.AUTOEB_AVOID_CONTINUOUS_ANSWERING = "AVOID";
+			shadow.querySelector(".AUTOEB_AVOID_CONTINUOUS_ANSWERING-descriptive-text").innerText = "AVOID";
+		} else {
+			localStorage.AUTOEB_AVOID_CONTINUOUS_ANSWERING = "CONTINUOUS";
+			shadow.querySelector(".AUTOEB_AVOID_CONTINUOUS_ANSWERING-descriptive-text").innerText = "Continuously";
+		}
+	});
 
-	(function () {
-		document.body.insertAdjacentHTML("beforeend", AUTOEB_UI);
+	shadow.getElementById("AUTOEB_TIMEOUT").addEventListener("input", () => {
+		localStorage.AUTOEB_TIMEOUT = shadow.getElementById("AUTOEB_TIMEOUT").value;
+	});
 
-		const AVOID_AUTO_CONTINUOUSLY_ANSWER_INTPUT = document.getElementById(
-			"AUTOEB_AVOID_CONTINUOUS_ANSWERING",
-		);
+	shadow.getElementById("AUTOEB_CORRECT_TARGET").addEventListener("input", () => {
+		localStorage.AUTOEB_CORRECT_TARGET = shadow.getElementById("AUTOEB_CORRECT_TARGET").value;
+	});
 
-		AVOID_AUTO_CONTINUOUSLY_ANSWER_INTPUT.addEventListener("change", () => {
-			const v = AVOID_AUTO_CONTINUOUSLY_ANSWER_INTPUT.checked;
+	// shadow.querySelector(".autoeb-settings-button .settings").addEventListener("click", () => {
+	// 	const OVERLAY = shadow.querySelector(".autoeb-overlay");
+	// 	OVERLAY.style.transform = "translateY(0) translateX(0)";
+	// 	OVERLAY.style.opacity = "1";
+	// 	OVERLAY.style.pointerEvents = "all";
+	// });
 
-			if (v) {
-				localStorage.AUTOEB_AVOID_CONTINUOUS_ANSWERING = "AVOID";
-				document.querySelector(
-					".AUTOEB_AVOID_CONTINUOUS_ANSWERING-descriptive-text",
-				).innerText = "AVOID";
-			} else {
-				localStorage.AUTOEB_AVOID_CONTINUOUS_ANSWERING = void 0;
-				document.querySelector(
-					".AUTOEB_AVOID_CONTINUOUS_ANSWERING-descriptive-text",
-				).innerText = "Continuously";
-			}
-		});
+	shadow.querySelector(".autoeb-overlay .overlay-close .close-button").addEventListener("click", () => {
+		const OVERLAY = shadow.querySelector(".autoeb-overlay");
+		OVERLAY.style.transform = "translateY(50%)";
+		OVERLAY.style.opacity = "0";
+		OVERLAY.style.pointerEvents = "none";
+	});
 
-		document
-			.getElementById("AUTOEB_TIMEOUT")
-			.addEventListener("input", () => {
-				const value = document.getElementById("AUTOEB_TIMEOUT").value;
-
-				localStorage.AUTOEB_TIMEOUT = value;
-			});
-
-		document
-			.getElementById("AUTOEB_CORRECT_TARGET")
-			.addEventListener("input", () => {
-				const value = document.getElementById(
-					"AUTOEB_CORRECT_TARGET",
-				).value;
-
-				localStorage.AUTOEB_CORRECT_TARGET = value;
-			});
-
-		document
-			.querySelector(".autoeb-settings-button>.settings")
-			.addEventListener("click", () => {
-				const AUTOEB_OVERLAY =
-					document.querySelector(".autoeb-overlay");
-
-				AUTOEB_OVERLAY.style.transform = "translateY(0) translateX(0)";
-				AUTOEB_OVERLAY.style.opacity = "1";
-				AUTOEB_OVERLAY.style.pointerEvents = "all";
-			});
-
-		document
-			.querySelector(".autoeb-overlay .overlay-close .close-button")
-			.addEventListener("click", () => {
-				const AUTOEB_OVERLAY =
-					document.querySelector(".autoeb-overlay");
-
-				AUTOEB_OVERLAY.style.transform = "translateY(50%)";
-				AUTOEB_OVERLAY.style.opacity = "0";
-				AUTOEB_OVERLAY.style.pointerEvents = "none";
-			});
-	})();
-
-	(function () {
-		pujs.setup.icons_path = "https://alphabrate.github.io/icons";
-		pujs.setup.init();
-
-		document.querySelectorAll("a.popup.link-blue").forEach((el) => {
-			el.addEventListener("click", () => {
-				document.body.classList.remove("homepage");
-			});
-		});
-	})();
+	setTimeout(() => {
+		if (pujs && pujs.setup) {
+			pujs.setup.icons_path = "https://alphabrate.github.io/icons";
+			pujs.setup.init();
+		}
+	}, 500);
 })();

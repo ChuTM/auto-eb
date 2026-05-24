@@ -1,9 +1,9 @@
 .pujs-poAlert {
-	z-index: 9999999999;
+	z-index: 9999999999 !important;
 }
 .pujs-poAlert::-webkit-scrollbar,
 .pujs-poAlert *::-webkit-scrollbar {
-	display: none;
+	display: none !important;
 }
 .homepage .auto-eb-hidden {
 	display: none;

@@ -6,6 +6,8 @@ import {
 	getSimilarity,
 	getCorrectArray,
 	getQuestionCount,
+	simulateClick,
+	simulateTyping
 } from "./utils.js";
 import { TIMEOUT, CORRECT_COUNT } from "./config.js";
 
@@ -45,29 +47,20 @@ export async function crackCourse() {
 			let answers = [];
 			const qType = q.getAttribute("type");
 
-			// --- MC (SMC) LOGIC ---
-			// Grabs the index directly from the parent question tag
 			if (qType === "smc") {
 				const qCorrectAttr = q.getAttribute("correct");
 				if (qCorrectAttr) {
 					const isNumeric = /^\d+$/.test(qCorrectAttr);
-					let val = isNumeric
-						? qCorrectAttr
-						: decrypt(qCorrectAttr, seed);
+					let val = isNumeric ? qCorrectAttr : decrypt(qCorrectAttr, seed);
 					if (val) answers.push(val);
 				}
-			}
-			// --- FILL-IN LOGIC ---
-			// Searches for 'correct' attributes inside child nodes
-			else {
+			} else {
 				q.querySelectorAll("[correct]").forEach((node) => {
 					const nodeCorrect = node.getAttribute("correct");
 					if (nodeCorrect) {
 						let val = decrypt(nodeCorrect, seed);
 						if (val) {
-							answers.push(
-								val.includes("/") ? val.split("/")[0] : val,
-							);
+							answers.push(val.includes("/") ? val.split("/")[0] : val);
 						}
 					}
 				});
@@ -101,45 +94,15 @@ async function inputAnswerForCurrentQuestion(correct = true) {
 	const iframe = getIframeContext();
 	if (!iframe || allQuestions.length === 0) return false;
 
-	const uiHead = decodeHtml(
-		iframe.querySelector(".c_question-head")?.innerText || "",
-	);
-	const uiBody = decodeHtml(
-		iframe.querySelector(".c_question-body")?.innerText || "",
-	);
+	const uiHead = decodeHtml(iframe.querySelector(".c_question-head")?.innerText || "");
+	const uiBody = decodeHtml(iframe.querySelector(".c_question-body")?.innerText || "");
 	const isRadio = iframe.querySelectorAll('input[type="radio"]').length > 0;
-
-	const debugData = allQuestions.map((q) => {
-		let score = 0;
-		let matchResult = "NO";
-		if (isRadio) {
-			const xmlHead = decodeHtml(q.headerText);
-			const isMatch =
-				xmlHead.length > 5 &&
-				(uiHead.includes(xmlHead) || xmlHead.includes(uiHead));
-			matchResult = isMatch ? "YES" : "NO";
-		} else {
-			score = getSimilarity(uiBody, q.bodyText);
-			matchResult = score > 0.6 ? "YES" : "NO";
-		}
-		return {
-			ID: q.id,
-			Match: matchResult,
-			"XML Reconstructed": q.bodyText.slice(0, 50),
-			Answers: q.answers.join(" | "),
-			_score: score,
-		};
-	});
-	addToTable(debugData);
 
 	let found = null;
 	if (isRadio) {
 		found = allQuestions.find((q) => {
 			const xmlHead = decodeHtml(q.headerText);
-			return (
-				xmlHead.length > 5 &&
-				(uiHead.includes(xmlHead) || xmlHead.includes(uiHead))
-			);
+			return xmlHead.length > 5 && (uiHead.includes(xmlHead) || xmlHead.includes(uiHead));
 		});
 	} else {
 		let bestScore = 0;
@@ -153,116 +116,84 @@ async function inputAnswerForCurrentQuestion(correct = true) {
 	}
 
 	if (found && found.answers.length > 0) {
-		addToLog(
-			`[TARGET] ID: ${found.id} | ANSWERS: ${JSON.stringify(found.answers)}`,
-			"DEV",
-		);
-		const inputs = iframe.querySelectorAll(
-			'input:not([type="hidden"]), select, .c_input-box',
-		);
+		const totalTextLength = uiHead.length + uiBody.length;
+		
+		// Phase 1: Simulate psychological reading delay based on text complexity
+		const readingTime = TIMEOUT("read", totalTextLength);
+		await new Promise((r) => setTimeout(r, readingTime));
 
-		found.answers.forEach((ans, i) => {
+		const inputs = iframe.querySelectorAll('input:not([type="hidden"]), select, .c_input-box');
+
+		for (let i = 0; i < found.answers.length; i++) {
+			const ans = found.answers[i];
+			
 			if (isRadio) {
 				const radioIdx = parseInt(ans) - 1;
 				const radios = iframe.querySelectorAll('input[type="radio"]');
-				if (correct) {
-					// Answer Correctly for This question
-					if (radios[radioIdx]) {
-						radios[radioIdx].checked = true;
-						radios[radioIdx].dispatchEvent(
-							new Event("change", { bubbles: true }),
-						);
-						radios[radioIdx].click();
-					}
-				} else {
-					// Answer incorrectly, randomly choose another one
-					chosenRadio = radioIdx === 0 ? radios[1] : radios[0];
-					if (chosenRadio) {
-						chosenRadio.checked = true;
-						chosenRadio.dispatchEvent(
-							new Event("change", { bubbles: true }),
-						);
-						chosenRadio.click();
-					}
+				let targetRadio = radios[radioIdx];
+				
+				if (!correct) {
+					targetRadio = radioIdx === 0 ? radios[1] : radios[0];
+				}
+				
+				if (targetRadio) {
+					// Phase 2a: Simulate target localization and mouse interaction latency
+					await new Promise((r) => setTimeout(r, TIMEOUT("click")));
+					await simulateClick(targetRadio);
 				}
 			} else {
 				const el = inputs[i];
 				if (el) {
-					// Correct
-					if (correct) {
-						el.value = ans;
-						el.dispatchEvent(
-							new Event(
-								el.tagName === "SELECT" ? "change" : "input",
-								{ bubbles: true },
-							),
-						);
+					const finalValue = correct ? ans : ans + "x";
+					// Phase 2b: Mimic micro-movements prior to text field parsing
+					await new Promise((r) => setTimeout(r, TIMEOUT("click")));
+					if (el.tagName === "SELECT") {
+						el.value = finalValue;
+						el.dispatchEvent(new Event("change", { bubbles: true }));
 					} else {
-						// Incorrectly
-						el.value = ans + ans;
-						el.dispatchEvent(
-							new Event(
-								el.tagName === "SELECT" ? "change" : "input",
-								{ bubbles: true },
-							),
-						);
+						await simulateTyping(el, finalValue);
 					}
 				}
 			}
-		});
+		}
 		return true;
 	}
 	return false;
 }
 
 export function startAutomation() {
-	const correctArray = getCorrectArray(getQuestionCount(), CORRECT_COUNT(getQuestionCount()));
-    console.log(correctArray, currentQuestion);
-	inputAnswerForCurrentQuestion(correctArray[currentQuestion]).then(
-		(success) => {
-			// Only proceed if we actually found an answer to click/fill
-			if (success) {
-				const iframe = getIframeContext();
-				setTimeout(() => {
-					const submitBtn = iframe?.querySelector(
-						"button[btn-for='submit']",
-					);
-					if (!submitBtn) return; // Stop if we can't find a submit button
+	const totalQuestions = getQuestionCount();
+	const correctArray = getCorrectArray(totalQuestions, CORRECT_COUNT(totalQuestions));
 
-					submitBtn.click();
+	inputAnswerForCurrentQuestion(correctArray[currentQuestion]).then(async (success) => {
+		if (success) {
+			const iframe = getIframeContext();
+			
+			// Deliberate pause post-answering before moving cursor to submission vector
+			await new Promise((r) => setTimeout(r, TIMEOUT("click")));
+			const submitBtn = iframe?.querySelector("button[btn-for='submit']");
+			if (!submitBtn) return;
 
-					setTimeout(() => {
-						const nextBtn = iframe?.querySelector(
-							"button[btn-for='next']",
-						);
+			await simulateClick(submitBtn);
 
-						// IF THERE IS NO NEXT BUTTON, WE ARE AT THE END. STOP.
-						if (!nextBtn || nextBtn.offsetParent === null) {
-							addToLog(
-								"Finished: No 'Next' button found.",
-								"INFO",
-							);
-							return;
-						}
+			// Gating time slice required for database mutation reflection
+			await new Promise((r) => setTimeout(r, Math.floor(Math.random() * 400 + 600)));
+			const nextBtn = iframe?.querySelector("button[btn-for='next']");
 
-						nextBtn.click();
-						currentQuestion++;
-
-						// Check user preference for continuous mode
-						if (
-							localStorage?.AUTOEB_AVOID_CONTINUOUS_ANSWERING !==
-							"AVOID"
-						) {
-							setTimeout(startAutomation, TIMEOUT());
-						}
-					}, TIMEOUT());
-				}, TIMEOUT());
-			} else {
-				addToLog(
-					"Automation stopped: No match found for this screen.",
-					"WARN",
-				);
+			if (!nextBtn || nextBtn.offsetParent === null) {
+				addToLog("Finished: No 'Next' button found.", "INFO");
+				return;
 			}
-		},
-	);
+
+			await simulateClick(nextBtn);
+			currentQuestion++;
+
+			if (localStorage?.AUTOEB_AVOID_CONTINUOUS_ANSWERING !== "AVOID") {
+				// Structural loop sequencing
+				setTimeout(startAutomation, Math.floor(Math.random() * 500 + 500));
+			}
+		} else {
+			addToLog("Automation stopped: No match found for this screen.", "WARN");
+		}
+	});
 }
