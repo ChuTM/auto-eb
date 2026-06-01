@@ -125,3 +125,7 @@ export async function simulateTyping(el, text) {
 	el.dispatchEvent(new Event("change", { bubbles: true }));
 	el.blur();
 }
+
+export async function sleep(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}

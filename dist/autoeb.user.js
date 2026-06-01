@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Auto EB
 // @namespace    http://tampermonkey.net/
-// @version      1.50
+// @version      1.60
 // @description  Complete your EB tasks in seconds.
 // @author       ReTrn.
 // @grant        GM_xmlhttpRequest
@@ -156,6 +156,11 @@
       el.blur();
     });
   }
+  function sleep(ms) {
+    return __async(this, null, function* () {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    });
+  }
 
   // src/logic.js
   var currentQuestion = 0;
@@ -163,6 +168,12 @@
     var _a, _b;
     const overlay = (_a = document.querySelector(".overlay-player")) == null ? void 0 : _a.contentDocument;
     return (_b = overlay == null ? void 0 : overlay.querySelector("iframe")) == null ? void 0 : _b.contentDocument;
+  }
+  function isInTaskPage() {
+    const iframe = getIframeContext();
+    return !!(iframe == null ? void 0 : iframe.querySelector(
+      ".c_course-title.p_head-title.ng-star-inserted"
+    ));
   }
   function getXMLData() {
     return __async(this, null, function* () {
@@ -205,7 +216,9 @@
               if (nodeCorrect) {
                 let val = decrypt(nodeCorrect, seed);
                 if (val) {
-                  answers.push(val.includes("/") ? val.split("/")[0] : val);
+                  answers.push(
+                    val.includes("/") ? val.split("/")[0] : val
+                  );
                 }
               }
             });
@@ -237,9 +250,28 @@
       const allQuestions = yield crackCourse();
       const iframe = getIframeContext();
       if (!iframe || allQuestions.length === 0) return false;
-      const uiHead = decodeHtml(((_a = iframe.querySelector(".c_question-head")) == null ? void 0 : _a.innerText) || "");
-      const uiBody = decodeHtml(((_b = iframe.querySelector(".c_question-body")) == null ? void 0 : _b.innerText) || "");
+      const uiHead = decodeHtml(
+        ((_a = iframe.querySelector(".c_question-head")) == null ? void 0 : _a.innerText) || ""
+      );
+      const uiBody = decodeHtml(
+        ((_b = iframe.querySelector(".c_question-body")) == null ? void 0 : _b.innerText) || ""
+      );
       const isRadio = iframe.querySelectorAll('input[type="radio"]').length > 0;
+      if (uiHead.includes("Students\u2019 Voices") || /student.*voice/.test(uiHead.toLowerCase())) {
+        const target = iframe.querySelectorAll('input[type="checkbox"]')[0];
+        console.log(target);
+        if (target) {
+          yield new Promise((r) => setTimeout(r, TIMEOUT("click")));
+          yield simulateClick(target);
+          return true;
+        }
+        addToLog(
+          "Special case matched but target not found, falling back to normal matching.",
+          "WARN"
+        );
+        addToLog(`UI Head: ${uiHead}`, "DEV");
+        addToLog(`UI Body: ${uiBody}`, "DEV");
+      }
       let found = null;
       if (isRadio) {
         found = allQuestions.find((q) => {
@@ -260,7 +292,9 @@
         const totalTextLength = uiHead.length + uiBody.length;
         const readingTime = TIMEOUT("read", totalTextLength);
         yield new Promise((r) => setTimeout(r, readingTime));
-        const inputs = iframe.querySelectorAll('input:not([type="hidden"]), select, .c_input-box');
+        const inputs = iframe.querySelectorAll(
+          'input:not([type="hidden"]), select, .c_input-box'
+        );
         for (let i = 0; i < found.answers.length; i++) {
           const ans = found.answers[i];
           if (isRadio) {
@@ -281,7 +315,9 @@
               yield new Promise((r) => setTimeout(r, TIMEOUT("click")));
               if (el.tagName === "SELECT") {
                 el.value = finalValue;
-                el.dispatchEvent(new Event("change", { bubbles: true }));
+                el.dispatchEvent(
+                  new Event("change", { bubbles: true })
+                );
               } else {
                 yield simulateTyping(el, finalValue);
               }
@@ -294,30 +330,115 @@
     });
   }
   function startAutomation() {
+    addToLog(
+      `Starting automation for Question ${currentQuestion + 1}...`,
+      "INFO"
+    );
     const totalQuestions = getQuestionCount();
-    const correctArray = getCorrectArray(totalQuestions, CORRECT_COUNT(totalQuestions));
-    inputAnswerForCurrentQuestion(correctArray[currentQuestion]).then((success) => __async(null, null, function* () {
-      if (success) {
-        const iframe = getIframeContext();
-        yield new Promise((r) => setTimeout(r, TIMEOUT("click")));
-        const submitBtn = iframe == null ? void 0 : iframe.querySelector("button[btn-for='submit']");
-        if (!submitBtn) return;
-        yield simulateClick(submitBtn);
-        yield new Promise((r) => setTimeout(r, Math.floor(Math.random() * 400 + 600)));
-        const nextBtn = iframe == null ? void 0 : iframe.querySelector("button[btn-for='next']");
-        if (!nextBtn || nextBtn.offsetParent === null) {
-          addToLog("Finished: No 'Next' button found.", "INFO");
-          return;
+    const correctArray = getCorrectArray(
+      totalQuestions,
+      CORRECT_COUNT(totalQuestions)
+    );
+    inputAnswerForCurrentQuestion(correctArray[currentQuestion]).then(
+      (success) => __async(null, null, function* () {
+        if (success) {
+          const iframe = getIframeContext();
+          yield new Promise((r) => setTimeout(r, TIMEOUT("click")));
+          const submitBtn = iframe == null ? void 0 : iframe.querySelector(
+            "button[btn-for='submit']"
+          );
+          if (!submitBtn) return;
+          yield simulateClick(submitBtn);
+          yield new Promise(
+            (r) => setTimeout(r, Math.floor(Math.random() * 400 + 600))
+          );
+          const nextBtn = iframe == null ? void 0 : iframe.querySelector("button[btn-for='next']");
+          if (!nextBtn || nextBtn.offsetParent === null) {
+            addToLog("Finished: No 'Next' button found.", "INFO");
+            if (sessionStorage.AUTOEB_FULL_AUTOMATION === "TASK_START") {
+              addToLog("All questions attempted. Submitting", "INFO");
+              sessionStorage.AUTOEB_FULL_AUTOMATION = "TASK_END_CONTINUE";
+              yield simulateClick(
+                iframe.querySelector("button[btn-for='end']")
+              );
+              location.reload();
+            }
+            return;
+          }
+          yield simulateClick(nextBtn);
+          currentQuestion++;
+          if ((localStorage == null ? void 0 : localStorage.AUTOEB_AVOID_CONTINUOUS_ANSWERING) !== "AVOID") {
+            setTimeout(
+              startAutomation,
+              Math.floor(Math.random() * 500 + 500)
+            );
+          }
+        } else {
+          addToLog(
+            "Automation stopped: No match found for this screen.",
+            "WARN"
+          );
         }
-        yield simulateClick(nextBtn);
-        currentQuestion++;
-        if ((localStorage == null ? void 0 : localStorage.AUTOEB_AVOID_CONTINUOUS_ANSWERING) !== "AVOID") {
-          setTimeout(startAutomation, Math.floor(Math.random() * 500 + 500));
+      })
+    );
+  }
+  function getAvailableTasks() {
+    const table_tasksRows = document.querySelectorAll(
+      ".table-responsive>table.table>tbody>tr"
+    );
+    return Array.from(table_tasksRows).reduce((tasks, row) => {
+      try {
+        const aElement = row.querySelector("a.popup.link-blue");
+        const mark = row.querySelector(
+          "td.text-center>span>span"
+        ).textContent;
+        if (mark === "-") {
+          tasks.push(aElement);
         }
-      } else {
-        addToLog("Automation stopped: No match found for this screen.", "WARN");
+      } catch (err) {
       }
-    }));
+      return tasks;
+    }, []);
+  }
+  function automaticallyCheckAndChooseDifficulty() {
+    setTimeout(() => __async(null, null, function* () {
+      var _a;
+      console.log(
+        sessionStorage.AUTOEB_FULL_AUTOMATION === "TASK_START",
+        isInTaskPage()
+      );
+      if (sessionStorage.AUTOEB_FULL_AUTOMATION === "TASK_START" && isInTaskPage()) {
+        iframeContent = getIframeContext();
+        let headingText = (_a = iframeContent == null ? void 0 : iframeContent.querySelector(
+          "span[tag='h1']>span[tag='b']"
+        )) == null ? void 0 : _a.innerText;
+        if (headingText == "LEVEL OF DIFFICULTY") {
+          const AUTOEB_DIFFICULTY_LEVEL = localStorage.AUTOEB_DIFFICULTY_LEVEL || "Challenging";
+          const index = AUTOEB_DIFFICULTY_LEVEL === "Challenging" ? 1 : 0;
+          yield simulateClick(
+            iframeContent.querySelectorAll(
+              "label.c_start_group-field_label"
+            )[index]
+          );
+          yield sleep(200);
+          yield simulateClick(
+            iframeContent.querySelector("button[btn-for='start']")
+          );
+          yield sleep(1e3);
+          startAutomation();
+          addToLog(
+            `Difficulty level "${AUTOEB_DIFFICULTY_LEVEL}" selected`
+          );
+        } else {
+          startAutomation();
+        }
+      }
+    }), 5e3);
+  }
+  function startFullAutomation() {
+    var _a;
+    sessionStorage.AUTOEB_FULL_AUTOMATION = "TASK_START";
+    (_a = getAvailableTasks()[0]) == null ? void 0 : _a.click();
   }
 
   // res/ui.html
@@ -328,7 +449,7 @@
 
   // src/main.js
   (function() {
-    sessionStorage.AUTOEB_VERSION = "1.50";
+    sessionStorage.AUTOEB_VERSION = "1.60";
     const mainStyle = document.createElement("link");
     mainStyle.rel = "stylesheet";
     mainStyle.href = "https://alb-cdn.web.app/popupjs/pu.min.css";
@@ -339,6 +460,9 @@
     const prism_script = document.createElement("script");
     prism_script.src = "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js";
     document.body.appendChild(prism_script);
+    const updater_script = document.createElement("script");
+    updater_script.src = "https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/services/updater.user.js";
+    document.body.appendChild(updater_script);
     const host = document.createElement("div");
     host.style.position = "fixed";
     host.style.zIndex = "2147483647";
@@ -350,7 +474,9 @@
       link.href = href;
       shadow.appendChild(link);
     };
-    appendStyleLink("https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css");
+    appendStyleLink(
+      "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"
+    );
     appendStyleLink("https://alb-cdn.web.app/popupjs/pu.min.css");
     let custom_style_tag = document.createElement("style");
     custom_style_tag.innerHTML = style_default;
@@ -359,27 +485,61 @@
     container.innerHTML = ui_default;
     shadow.appendChild(container);
     let start_autofill = document.createElement("button");
-    start_autofill.innerText = "Activate Auto EB";
+    start_autofill.innerText = "Activate Auto EB 1.60";
     start_autofill.className = "auto-eb-hidden";
     start_autofill.style.cssText = `position: fixed; bottom: 2rem; left: 2rem; background: white; padding: 0.5rem 1rem; border-radius: 11px; box-shadow: 0 0 10px 0px #00000035; cursor: pointer; display: block; font-family: sans-serif; font-weight: bold; transition: all 0.2s ease;`;
     start_autofill.addEventListener("click", (e) => {
-      start_autofill.innerText = "Auto EB is running...";
-      start_autofill.style.background = "#2e7d32";
-      start_autofill.style.color = "#ffffff";
-      start_autofill.style.cursor = "default";
-      start_autofill.disabled = true;
-      const statusTextElement = shadow.querySelector(".autoeb-status-text");
-      if (statusTextElement) {
-        statusTextElement.innerText = "Status: Auto EB is running...";
-        statusTextElement.style.color = "#4caf50";
+      if (!isInTaskPage()) {
+        pujs.popup(
+          "Start Automation?",
+          // Title
+          `Auto-EB will take over the web page to complete all the tasks.`,
+          // Message
+          [
+            {
+              // Buttons
+              text: "Start Now",
+              color: "lightgreen",
+              callback: () => {
+                startFullAutomation();
+              }
+            },
+            {
+              // Cancel Button
+              text: "Cancel",
+              callback: () => {
+              }
+            }
+          ],
+          "horiz"
+        );
+        return;
+      } else {
+        start_autofill.innerText = "Auto EB is running...";
+        start_autofill.style.background = "#2e7d32";
+        start_autofill.style.color = "#ffffff";
+        start_autofill.style.cursor = "default";
+        start_autofill.disabled = true;
+        const statusTextElement = shadow.querySelector(
+          ".autoeb-status-text"
+        );
+        if (statusTextElement) {
+          statusTextElement.innerText = "Status: Auto EB is running...";
+          statusTextElement.style.color = "#4caf50";
+        }
+        startAutomation(e);
       }
-      startAutomation(e);
     });
     shadow.appendChild(start_autofill);
+    addToLog("Auto EB UI Initialized");
     let getAllAnswers = document.createElement("button");
     getAllAnswers.innerText = "Avoid Detection,\nInteract with page first.\nGet Decrypted XML";
     getAllAnswers.style.cssText = `position: fixed; left: 2rem; bottom: 5rem; cursor: pointer; text-decoration: underline; background: transparent; border: none; color: #0066cc; font-family: sans-serif;`;
     getAllAnswers.addEventListener("click", () => {
+      if (!isInTaskPage()) {
+        pujs.alert("Try this in a task page.");
+        return;
+      }
       getXMLData().then((data) => __async(null, null, function* () {
         addToLog("Original Data Received");
         const xmlString = yield getXMLData();
@@ -417,21 +577,29 @@
       }));
     });
     shadow.appendChild(getAllAnswers);
-    const AVOID_AUTO_CONTINUOUS_RETRY = shadow.getElementById("AUTOEB_AVOID_CONTINUOUS_ANSWERING");
+    const AVOID_AUTO_CONTINUOUS_RETRY = shadow.getElementById(
+      "AUTOEB_AVOID_CONTINUOUS_ANSWERING"
+    );
     AVOID_AUTO_CONTINUOUS_RETRY.addEventListener("change", () => {
       if (AVOID_AUTO_CONTINUOUS_RETRY.checked) {
         localStorage.AUTOEB_AVOID_CONTINUOUS_ANSWERING = "AVOID";
-        shadow.querySelector(".AUTOEB_AVOID_CONTINUOUS_ANSWERING-descriptive-text").innerText = "AVOID";
+        shadow.querySelector(
+          ".AUTOEB_AVOID_CONTINUOUS_ANSWERING-descriptive-text"
+        ).innerText = "AVOID";
       } else {
         localStorage.AUTOEB_AVOID_CONTINUOUS_ANSWERING = "CONTINUOUS";
-        shadow.querySelector(".AUTOEB_AVOID_CONTINUOUS_ANSWERING-descriptive-text").innerText = "Continuously";
+        shadow.querySelector(
+          ".AUTOEB_AVOID_CONTINUOUS_ANSWERING-descriptive-text"
+        ).innerText = "Continuously";
       }
     });
     shadow.getElementById("AUTOEB_TIMEOUT").addEventListener("input", () => {
       localStorage.AUTOEB_TIMEOUT = shadow.getElementById("AUTOEB_TIMEOUT").value;
     });
     shadow.getElementById("AUTOEB_CORRECT_TARGET").addEventListener("input", () => {
-      localStorage.AUTOEB_CORRECT_TARGET = shadow.getElementById("AUTOEB_CORRECT_TARGET").value;
+      localStorage.AUTOEB_CORRECT_TARGET = shadow.getElementById(
+        "AUTOEB_CORRECT_TARGET"
+      ).value;
     });
     shadow.querySelector(".autoeb-overlay .overlay-close .close-button").addEventListener("click", () => {
       const OVERLAY = shadow.querySelector(".autoeb-overlay");
@@ -439,10 +607,25 @@
       OVERLAY.style.opacity = "0";
       OVERLAY.style.pointerEvents = "none";
     });
+    document.querySelectorAll("a.popup.link-blue[data-from='lesson']").forEach((el) => {
+      el.addEventListener("click", () => {
+        addToLog("Lesson Opened");
+        console.log(
+          sessionStorage.AUTOEB_FULL_AUTOMATION === "TASK_START"
+        );
+        if (sessionStorage.AUTOEB_FULL_AUTOMATION === "TASK_START") {
+          automaticallyCheckAndChooseDifficulty();
+        }
+      });
+    });
     setTimeout(() => {
       if (pujs && pujs.setup) {
         pujs.setup.icons_path = "https://alphabrate.github.io/icons";
         pujs.setup.init();
+      }
+      if (sessionStorage.AUTOEB_FULL_AUTOMATION === "TASK_END_CONTINUE") {
+        startFullAutomation();
+        start_autofill.innerText = "Continuing to next task...";
       }
     }, 500);
   })();
