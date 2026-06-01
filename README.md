@@ -1,5 +1,7 @@
 # [📖 Auto EB](https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js)
 
+* **Method A (Automatic):** Click this link: [autoeb.user.js](https://raw.githubusercontent.com/ChuTM/auto-eb/refs/heads/main/dist/autoeb.user.js). Safari should prompt you to "Install" or "Create" the script automatically.
+
 ## Watch Tutorial
 <p align="center" width="100%">
    <video src="https://github.com/user-attachments/assets/5eb654eb-1cfd-4595-8765-d68eb0162180" width="80%" controls autoplay loop></video>
