@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUTOEB PAGE</title>
+    <style>
+        *::-webkit-scrollbar {
+            display: none;
+        }
+
+        *::selection {
+            background-color: rgba(167, 167, 255, 0.3) !important;
+        }
+
+        /*
+Name:   Duotone Light
+Author: Simurai, adapted from DuoTone themes for Atom (http://simurai.com/projects/2016/01/01/duotone-themes)
+
+Conversion: Bram de Haan (http://atelierbram.github.io/Base2Tone-prism/output/prism/prism-base2tone-morning-light.css)
+Generated with Base16 Builder (https://github.com/base16-builder/base16-builder)
+*/
+
+        code[class*="language-"],
+        pre[class*="language-"] {
+            font-family: Consolas, Menlo, Monaco, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", "Courier New", Courier, monospace;
+            font-size: 14px;
+            line-height: 1.375;
+            direction: ltr;
+            text-align: left;
+            white-space: pre;
+            word-spacing: normal;
+            word-break: normal;
+
+            -moz-tab-size: 4;
+            -o-tab-size: 4;
+            tab-size: 4;
+
+            -webkit-hyphens: none;
+            -moz-hyphens: none;
+            -ms-hyphens: none;
+            hyphens: none;
+            background: #fffefe;
+            color: #728fcb;
+
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        pre>code[class*="language-"] {
+            font-size: 1em;
+        }
+
+        /* Code blocks */
+        pre[class*="language-"] {
+            padding: 1em;
+            margin: .5em 0;
+            overflow: auto;
+            border-radius: 11px;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        /* Inline code */
+        :not(pre)>code[class*="language-"] {
+            padding: .1em;
+            border-radius: .3em;
+        }
+
+        .token.comment,
+        .token.prolog,
+        .token.doctype,
+        .token.cdata {
+            color: #b6ad9a;
+        }
+
+        .token.punctuation {
+            color: #b6ad9a;
+        }
+
+        .token.namespace {
+            opacity: .7;
+        }
+
+        .token.tag,
+        .token.operator,
+        .token.number {
+            color: #063289;
+        }
+
+        .token.property,
+        .token.function {
+            color: #b29762;
+        }
+
+        .token.tag-id,
+        .token.selector,
+        .token.atrule-id {
+            color: #2d2006;
+        }
+
+        code.language-javascript,
+        .token.attr-name {
+            color: #896724;
+        }
+
+        code.language-css,
+        code.language-scss,
+        .token.boolean,
+        .token.string,
+        .token.entity,
+        .token.url,
+        .language-css .token.string,
+        .language-scss .token.string,
+        .style .token.string,
+        .token.attr-value,
+        .token.keyword,
+        .token.control,
+        .token.directive,
+        .token.unit,
+        .token.statement,
+        .token.regex,
+        .token.atrule {
+            color: #728fcb;
+        }
+
+        .token.placeholder,
+        .token.variable {
+            color: #93abdc;
+        }
+
+        .token.deleted {
+            text-decoration: line-through;
+        }
+
+        .token.inserted {
+            border-bottom: 1px dotted #2d2006;
+            text-decoration: none;
+        }
+
+        .token.italic {
+            font-style: italic;
+        }
+
+        .token.important,
+        .token.bold {
+            font-weight: bold;
+        }
+
+        .token.important {
+            color: #896724;
+        }
+
+        .token.entity {
+            cursor: help;
+        }
+
+        pre>code.highlight {
+            outline: .4em solid #896724;
+            outline-offset: .4em;
+        }
+
+        /* overrides color-values for the Line Numbers plugin
+ * http://prismjs.com/plugins/line-numbers/
+ */
+        .line-numbers.line-numbers .line-numbers-rows {
+            border-right-color: #ece8de;
+        }
+
+        .line-numbers .line-numbers-rows>span:before {
+            color: #cdc4b1;
+        }
+
+        .correctAnswer {
+            background: yellow;
+        }
+
+        .highlight {
+            background: rgba(0, 191, 255, 0.5);
+        }
+
+        .strongHighlight {
+            display: inline-block;
+            background: rgba(0, 255, 55, 0.5);
+            color: black !important;
+            animation: jump 0.5s ease-in-out forwards;
+        }
+
+        @keyframes jump {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* overrides color-values for the Line Highlight plugin
+ * http://prismjs.com/plugins/line-highlight/
+ */
+        .line-highlight.line-highlight {
+            background: rgba(45, 32, 6, 0.2);
+            background: -webkit-linear-gradient(left, rgba(45, 32, 6, 0.2) 70%, rgba(45, 32, 6, 0));
+            background: linear-gradient(to right, rgba(45, 32, 6, 0.2) 70%, rgba(45, 32, 6, 0));
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            padding: 34px;
+            margin: 0;
+            padding-bottom: 75px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 14px;
+                padding-bottom: 75px;
+            }
+
+            h1 {
+                margin-top: 14px;
+            }
+
+            pre {
+                font-size: 12px !important;
+            }
+        }
+
+        .auto-eb {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 24px;
+
+            h1 {
+                margin-bottom: 8px;
+            }
+
+            p {
+                margin: 8px 0;
+            }
+
+            button {
+                border: none;
+                outline: none;
+                background: #EBEBEB;
+                border-radius: 7px;
+            }
+        }
+
+        .copyright {
+            color: rgba(0, 0, 0, 0.2);
+            margin: 10px auto;
+            margin-top: 19px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .overlay {
+            position: fixed;
+            bottom: 24px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+
+            .input {
+                width: 80%;
+                max-width: 400px;
+                height: 30px;
+                border: 1px solid rgba(0, 0, 0, 0.1);
+                outline: none;
+                padding: 4px 16px;
+                padding-right: 8px;
+                border-radius: 70px;
+                background: rgba(255, 255, 255, 0.5);
+                backdrop-filter: blur(7px);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            }
+
+            .input>input {
+                background: transparent;
+                border: none;
+                outline: none;
+                width: 100%;
+                height: 100%;
+                font-size: 16px;
+            }
+
+            .input>input:not(:placeholder-shown)+.searchControls {
+                opacity: 0.3 !important;
+
+            }
+
+            .searchControls {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                opacity: 0;
+                transition: .3s;
+            }
+
+            .searchControls>button {
+                background: transparent;
+                width: 24px;
+                height: 24px;
+                outline: none;
+                border: none;
+                display: flex;
+                justify-content: center;
+                align-items: flex-end;
+                transition: .3s;
+
+                svg {
+                    transform: scale(1.5);
+                }
+            }
+
+            button#nextBtn {
+                transform: rotate(180deg);
+            }
+
+            #resultCounter {
+                opacity: 0.3;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="auto-eb">
+        <h1>AUTOEB</h1>
+        <p>AutoEB has decrypted the source XML File.</p>
+        <p>Look for the `correct` attributes for the answers.</p>
+        <div class="controls">
+            <button onclick="window.close()">Close</button>
+        </div>
+    </div>
+
+    <!-- XML DATA -->
+    <pre>NO XML DATA FOUND</pre>
+    <!-- END XML DATA -->
+
+    <p class="copyright">&copy; Copyright 2026 ChuTM. All rights reserved.</p>
+    <div class="overlay">
+        <div class="input">
+            <input id="searchInput" type="text" placeholder="Search...">
+            <div class="searchControls">
+                <button id="prevBtn" title="Previous"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" class="lucide lucide-chevron-up-icon lucide-chevron-up">
+                        <path d="m18 15-6-6-6 6" />
+                    </svg></button>
+                <button id="nextBtn" title="Next">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-chevron-up-icon lucide-chevron-up">
+                        <path d="m18 15-6-6-6 6" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll(".token.attr-name").forEach(w => {
+            if (w.innerHTML === "correct") {
+                w.classList.add("correctAnswer");
+            }
+        });
+
+        const input = document.getElementById('searchInput');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const counter = document.getElementById('resultCounter');
+        let results = [];
+        let current = -1;
+
+        function normalize(s) { return s.toLowerCase(); }
+        function escapeHtml(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+        function updateResults() {
+            const q = normalize(input.value.trim());
+            // restore original token text if modified
+            document.querySelectorAll('.token').forEach(el => {
+                if (el.dataset.original != null) el.innerHTML = escapeHtml(el.dataset.original);
+            });
+            results = [];
+            current = -1;
+            if (!q) { counter.textContent = '0 / 0'; return; }
+            // find tokens containing query and wrap matched substring(s)
+            document.querySelectorAll('.token').forEach(el => {
+                const orig = el.textContent;
+                if (el.dataset.original == null) el.dataset.original = orig;
+                const low = normalize(orig);
+                if (!low.includes(q)) return;
+                // build innerHTML with matched parts wrapped
+                const parts = [];
+                let idx = 0;
+                let start = low.indexOf(q, idx);
+                while (start !== -1) {
+                    parts.push(escapeHtml(orig.slice(idx, start)));
+                    const matched = orig.slice(start, start + q.length);
+                    parts.push('<span class="tokenMatch">' + escapeHtml(matched) + '</span>');
+                    idx = start + q.length;
+                    start = low.indexOf(q, idx);
+                }
+                parts.push(escapeHtml(orig.slice(idx)));
+                el.innerHTML = parts.join('');
+                // collect match spans
+                el.querySelectorAll('.tokenMatch').forEach(ms => results.push(ms));
+            });
+            // mark highlights on matched substrings
+            results.forEach(ms => ms.classList.add('highlight'));
+            if (results.length) {
+                current = 0;
+                results[0].classList.remove('highlight');
+                results[0].classList.add('strongHighlight');
+                results[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            counter.textContent = (results.length ? (current + 1) : 0) + ' / ' + results.length;
+        }
+
+        function setCurrent(idx) {
+            if (!results.length) return;
+            results[current].classList.remove('strongHighlight');
+            results[current].classList.add('highlight');
+            current = (idx + results.length) % results.length;
+            results[current].classList.remove('highlight');
+            results[current].classList.add('strongHighlight');
+            results[current].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            counter.textContent = (current + 1) + ' / ' + results.length;
+        }
+
+        input.addEventListener('input', updateResults);
+        nextBtn.addEventListener('click', (e) => { if (results.length) setCurrent(current + 1); });
+        prevBtn.addEventListener('click', (e) => { if (results.length) setCurrent(current - 1); });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { if (e.shiftKey) { if (results.length) setCurrent(current - 1); } else { if (results.length) setCurrent(current + 1); } }
+        });
+    </script>
+</body>
+
+</html>

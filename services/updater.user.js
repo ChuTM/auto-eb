@@ -18,7 +18,7 @@
 			);
 
 			const latestVersion = data.split("=")[1].trim();
-			if (latestVersion !== sessionStorage.AUTOEB_VERSION) {
+			if (latestVersion > sessionStorage.AUTOEB_VERSION) {
 				pujs.popup(
 					"Update Detected", // Title
 					`Current Version: ${sessionStorage.AUTOEB_VERSION}\nLatest Version: ${latestVersion}. Please update the script for the latest features and bug fixes.`, // Message

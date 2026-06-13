@@ -8,13 +8,33 @@ import {
 	automaticallyCheckAndChooseDifficulty,
 	startFullAutomation,
 } from "./logic.js";
-import { addToLog, decrypt } from "./utils.js";
+import {
+	addToLog,
+	decrypt,
+	getPresistence,
+	reportPresistence,
+	setAutoEBButtonCSS,
+} from "./utils.js";
 
 import AUTOEB_UI from "../res/ui.html";
 import AUTOEB_STYLE from "../res/style.css";
+import AUTOEB_BLANK_XML_DATA_PAGE from "../res/xml_data.html";
 
 (function () {
-	sessionStorage.AUTOEB_VERSION = "1.60";
+	// Read localStorage variables and validate them
+
+	const rawTimeout = localStorage.getItem("AUTOEB_TIMEOUT");
+	let AUTOEB_TIMEOUT = null;
+	if (rawTimeout !== null && rawTimeout !== "") {
+		const parsedTimeout = parseInt(rawTimeout, 10);
+		if (!Number.isNaN(parsedTimeout) && parsedTimeout >= 10) {
+			AUTOEB_TIMEOUT = parsedTimeout;
+		} else {
+			localStorage.removeItem("AUTOEB_TIMEOUT");
+		}
+	}
+
+	sessionStorage.AUTOEB_VERSION = "1.61";
 
 	// Append Popup styles to main head context to satisfy core UI dependency check
 	const mainStyle = document.createElement("link");
@@ -64,9 +84,9 @@ import AUTOEB_STYLE from "../res/style.css";
 	shadow.appendChild(container);
 
 	let start_autofill = document.createElement("button");
-	start_autofill.innerText = "Activate Auto EB 1.60";
-	start_autofill.className = "auto-eb-hidden";
-	start_autofill.style.cssText = `position: fixed; bottom: 2rem; left: 2rem; background: white; padding: 0.5rem 1rem; border-radius: 11px; box-shadow: 0 0 10px 0px #00000035; cursor: pointer; display: block; font-family: sans-serif; font-weight: bold; transition: all 0.2s ease;`;
+	start_autofill.innerText = `Activate Auto EB ${sessionStorage.AUTOEB_VERSION}`;
+	start_autofill.className = "auto-eb-hidden eb-button";
+	setAutoEBButtonCSS(start_autofill, "default");
 
 	start_autofill.addEventListener("click", (e) => {
 		if (!isInTaskPage()) {
@@ -94,10 +114,15 @@ import AUTOEB_STYLE from "../res/style.css";
 			return;
 		} else {
 			// Reflect runtime lifecycle change on the primary action trigger
-			start_autofill.innerText = "Auto EB is running...";
-			start_autofill.style.background = "#2e7d32";
-			start_autofill.style.color = "#ffffff";
-			start_autofill.style.cursor = "default";
+			setAutoEBButtonCSS(
+				start_autofill,
+				{
+					color: "#ffffff",
+					background: "#2e7d32",
+					cursor: "default",
+				},
+				"Auto EB is running...",
+			);
 			start_autofill.disabled = true;
 
 			// Propagate state variables directly into the parameters interface
@@ -113,6 +138,7 @@ import AUTOEB_STYLE from "../res/style.css";
 		}
 	});
 	shadow.appendChild(start_autofill);
+	reportPresistence(start_autofill, "autofill");
 
 	addToLog("Auto EB UI Initialized");
 
@@ -141,9 +167,11 @@ import AUTOEB_STYLE from "../res/style.css";
 
 			pujs.pullOut(
 				`
-				<div style="display: flex; flex-direction: column; width: 100%; height: 100%; overflow-x: scroll;">
+				<div>
 					<center style="color:white; margin-bottom:10px; font-family: sans-serif;">Decrypted Source XML</center>
-					<pre class="language-xml" id="xml-container"><code id="xml-block" class="language-xml"></code></pre>
+					<p>The source data has be parsed by the powerful AutoEB, <a id="pullOutNewTabLink" target="_blank" style="color: lightblue; text-decoration: underline;">click here to open in new tab to view.</a></p>
+					<div style="display: none"><pre class="language-xml" id="xml-container"><code id="xml-block" class="language-xml"></code></pre></div>
+					
 				</div>
 				`,
 				true,
@@ -164,14 +192,30 @@ import AUTOEB_STYLE from "../res/style.css";
 					xml_block.className = "language-xml";
 					try {
 						window.Prism.highlightElement(xml_block);
+						setTimeout(() => {
+							const htmlContent =
+								AUTOEB_BLANK_XML_DATA_PAGE.replace(
+									"<pre>NO XML DATA FOUND</pre>",
+									document.getElementById("xml-container")
+										.outerHTML,
+								);
+							const blob = new Blob([htmlContent], {
+								type: "text/html",
+							});
+							const url = URL.createObjectURL(blob);
+
+							document.getElementById("pullOutNewTabLink").href =
+								url;
+						});
 					} catch (e) {
 						console.error("Highlight Error:", e);
 					}
 				}
-			}, 10);
+			}, 100);
 		});
 	});
 	shadow.appendChild(getAllAnswers);
+	reportPresistence(getAllAnswers, "XMLData")
 
 	const AVOID_AUTO_CONTINUOUS_RETRY = shadow.getElementById(
 		"AUTOEB_AVOID_CONTINUOUS_ANSWERING",
@@ -203,12 +247,26 @@ import AUTOEB_STYLE from "../res/style.css";
 			).value;
 		});
 
-	// shadow.querySelector(".autoeb-settings-button .settings").addEventListener("click", () => {
-	// 	const OVERLAY = shadow.querySelector(".autoeb-overlay");
-	// 	OVERLAY.style.transform = "translateY(0) translateX(0)";
-	// 	OVERLAY.style.opacity = "1";
-	// 	OVERLAY.style.pointerEvents = "all";
-	// });
+	shadow
+		.querySelector(".autoeb-settings-button .settings")
+		.addEventListener("click", () => {
+			const OVERLAY = shadow.querySelector(".autoeb-overlay");
+			OVERLAY.style.transform = "translateY(0) translateX(0)";
+			OVERLAY.style.opacity = "1";
+			OVERLAY.style.pointerEvents = "all";
+
+			try {
+				shadow.getElementById("AUTOEB_TIMEOUT").value =
+					parseInt(localStorage.AUTOEB_TIMEOUT) || "";
+			} catch {
+				localStorage.AUTOEB_TIMEOUT = undefined;
+			}
+			shadow.getElementById("AUTOEB_AVOID_CONTINUOUS_ANSWERING").checked =
+				localStorage.AUTOEB_AVOID_CONTINUOUS_ANSWERING === "AVOID";
+			shadow.querySelector(
+				".AUTOEB_AVOID_CONTINUOUS_ANSWERING-descriptive-text",
+			).innerText = localStorage.AUTOEB_AVOID_CONTINUOUS_ANSWERING;
+		});
 
 	shadow
 		.querySelector(".autoeb-overlay .overlay-close .close-button")
@@ -222,7 +280,10 @@ import AUTOEB_STYLE from "../res/style.css";
 	document
 		.querySelectorAll("a.popup.link-blue[data-from='lesson']")
 		.forEach((el) => {
-			el.addEventListener("click", () => {
+			el.addEventListener("click", (e) => {
+				if (e.isTrusted) {
+					sessionStorage.AUTOEB_FULL_AUTOMATION = "ENDED";
+				}
 				addToLog("Lesson Opened");
 				console.log(
 					sessionStorage.AUTOEB_FULL_AUTOMATION === "TASK_START",

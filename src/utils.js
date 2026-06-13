@@ -1,6 +1,16 @@
 import { MAP } from "./config.js";
 import { getIframeContext } from "./logic.js";
 
+const presistence = {};
+
+export function reportPresistence(e, v) {
+	presistence[v] = e;
+}
+
+export function getPresistence(e) {
+	return presistence[e];
+}
+
 export function decrypt(encoded, seed) {
 	if (!encoded) return "N/A";
 	let result = "";
@@ -88,15 +98,27 @@ export function getQuestionCount() {
  */
 export async function simulateClick(el) {
 	if (!el) return;
-	const events = ["pointerdown", "mousedown", "pointerup", "mouseup", "click"];
+	const events = [
+		"pointerdown",
+		"mousedown",
+		"pointerup",
+		"mouseup",
+		"click",
+	];
 	for (const name of events) {
 		const ev = new MouseEvent(name, {
 			bubbles: true,
 			cancelable: true,
-			buttons: 1
+			buttons: 1,
 		});
 		el.dispatchEvent(ev);
-		await new Promise((r) => setTimeout(r, Math.floor(Math.random() * 30 + 20)));
+		await new Promise((r) =>
+			setTimeout(
+				r,
+				localStorage?.AUTOEB_TIMEOUT ||
+					Math.floor(Math.random() * 30 + 20),
+			),
+		);
 	}
 }
 
@@ -107,25 +129,60 @@ export async function simulateTyping(el, text) {
 	if (!el) return;
 	el.focus();
 	el.value = "";
-	
+
 	for (let i = 0; i < text.length; i++) {
 		const char = text[i];
-		
-		el.dispatchEvent(new KeyboardEvent("keydown", { key: char, bubbles: true }));
-		el.dispatchEvent(new KeyboardEvent("keypress", { key: char, bubbles: true }));
-		
+
+		el.dispatchEvent(
+			new KeyboardEvent("keydown", { key: char, bubbles: true }),
+		);
+		el.dispatchEvent(
+			new KeyboardEvent("keypress", { key: char, bubbles: true }),
+		);
+
 		el.value += char;
 		el.dispatchEvent(new Event("input", { bubbles: true }));
-		
-		el.dispatchEvent(new KeyboardEvent("keyup", { key: char, bubbles: true }));
-		
-		await new Promise((r) => setTimeout(r, Math.floor(Math.random() * 60 + 60)));
+
+		el.dispatchEvent(
+			new KeyboardEvent("keyup", { key: char, bubbles: true }),
+		);
+
+		await new Promise((r) =>
+			setTimeout(r, Math.floor(Math.random() * 60 + 60)),
+		);
 	}
-	
+
 	el.dispatchEvent(new Event("change", { bubbles: true }));
 	el.blur();
 }
 
 export async function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function setAutoEBButtonCSS(
+	target,
+	type = "default",
+	text,
+	disabled = false,
+) {
+	e = target || getPresistence("autofill");
+	const map = {
+		default: `position: fixed;bottom: 2rem;left: 2rem;background: white;padding: 0.7rem 1rem;border-radius: 11px;box-shadow: 0 0 10px 0px #00000035;cursor: pointer;display: block;font-family: sans-serif;font-weight: bold;transition: all 0.2s ease;outline: none;border: none;`,
+		error: `position: fixed;bottom: 2rem;left: 2rem;background: #ff3e3e;color: white;padding: 0.7rem 1rem;border-radius: 11px;box-shadow: 0 0 10px 0px #00000035;cursor: pointer;display: block;font-family: sans-serif;font-weight: bold;transition: all 0.2s ease;outline: none;border: none;`,
+	};
+
+	if (typeof type === "string") e.style.cssText = map[type] || map.default;
+	else if (typeof type === "object") {
+		const style = type;
+		Object.keys(style).forEach((w) => {
+			const key = w,
+				value = style[w];
+			e.style[key] = value;
+		});
+	}
+
+	if (text) e.innerText = text;
+
+	e.disabled = disabled;
 }

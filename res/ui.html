@@ -1,34 +1,57 @@
-<div class="autoeb-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transform: translateY(50%); transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); z-index: 2147483647;">
-    <div class="autoeb-settings-card" style="background: #1e1e1e; color: #ffffff; padding: 2rem; border-radius: 16px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: sans-serif; border: 1px solid #333;">
+<div class="autoeb-overlay"
+    style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transform: translateY(50%); transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); z-index: 2147483647;">
+    <div class="autoeb-settings-card"
+        style="position: relative;background: #1e1e1e; color: #ffffff; padding: 2rem; border-radius: 16px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: sans-serif; border: 1px solid #333;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 style="margin: 0; font-size: 1.5rem; font-weight: 600;">Engine Parameters</h2>
-            <div class="overlay-close"><button class="close-button" style="background: transparent; border: none; color: #888; cursor: pointer; font-size: 1.2rem;">&times;</button></div>
+            <h2 style="margin: 0; font-size: 1.5rem; font-weight: 600;">AutoEB Engine Settings</h2>
+            <div class="overlay-close">
+                <button class="close-button"
+                    style="background: transparent; border: none; color: #888; cursor: pointer; font-size: 1.2rem;">&times;</button>
+            </div>
         </div>
-        
+
         <!-- Live tracking module inside operational controller panel -->
-        <div class="autoeb-status-text" style="margin-bottom: 1.5rem; font-size: 0.9rem; color: #aaa; font-weight: 500; transition: color 0.2s ease;">Status: Idle</div>
+        <div class="autoeb-status-text"
+            style="margin-bottom: 1.5rem; font-size: 0.9rem; color: #aaa; font-weight: 500; transition: color 0.2s ease;">
+            Status: Idle</div>
 
-        <div style="margin-bottom: 1.2rem;">
-            <label style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: #aaa;">Target Correct Count</label>
-            <input type="number" id="AUTOEB_CORRECT_TARGET" style="width: 100%; background: #2a2a2a; border: 1px solid #444; border-radius: 8px; padding: 0.6rem; color: white; box-sizing: border-box;" placeholder="e.g. 8">
+        <div style="margin-bottom: 1.2rem; display: none;">
+            <label style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: #aaa;">Target Correct
+                Count</label>
+            <input type="number" id="AUTOEB_CORRECT_TARGET"
+                style="width: 100%; background: #2a2a2a; border: 1px solid #444; border-radius: 8px; padding: 0.6rem; color: white; box-sizing: border-box;"
+                placeholder="e.g. 8">
         </div>
 
         <div style="margin-bottom: 1.2rem;">
-            <label style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: #aaa;">Step Delay Latency (ms)</label>
-            <input type="number" id="AUTOEB_TIMEOUT" style="width: 100%; background: #2a2a2a; border: 1px solid #444; border-radius: 8px; padding: 0.6rem; color: white; box-sizing: border-box;" placeholder="e.g. 2000">
+            <label style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: #aaa;">Step Delay
+                (ms)</label>
+            <input type="number" id="AUTOEB_TIMEOUT"
+                style="width: 100%; background: #2a2a2a; border: 1px solid #444; border-radius: 8px; padding: 0.6rem; color: white; box-sizing: border-box;"
+                placeholder="Leave blank to emulate human-like answering.">
         </div>
 
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #333;">
-            <span style="font-size: 0.85rem; color: #aaa;">Continuous Answering Mode</span>
+        <div
+            style="display: flex; align-items: center; justify-content: space-between; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #333;">
+            <span style="font-size: 0.85rem; color: #aaa;">Stop Between Questions</span>
             <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                <input type="checkbox" id="AUTOEB_AVOID_CONTINUOUS_ANSWERING" style="opacity: 0; width: 0; height: 0;">
-                <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #444; transition: .3s; border-radius: 24px;"></span>
+                <input type="checkbox" id="AUTOEB_AVOID_CONTINUOUS_ANSWERING">
             </label>
         </div>
-        <div style="font-size: 0.75rem; color: #666; margin-top: 0.4rem; text-align: right;" class="AUTOEB_AVOID_CONTINUOUS_ANSWERING-descriptive-text">Continuously</div>
+        <div style="font-size: 0.75rem; color: #666; margin-top: 0.4rem; text-align: right;"
+            class="AUTOEB_AVOID_CONTINUOUS_ANSWERING-descriptive-text">Continuously</div>
     </div>
 </div>
-<!-- 
-<div class="autoeb-settings-button" style="position: fixed; bottom: 2rem; left: 13rem; z-index: 2147483646;">
-    <button class="settings" style="background: #2a2a2a; color: white; border: 1px solid #444; padding: 0.5rem 1rem; border-radius: 11px; box-shadow: 0 0 10px rgba(0,0,0,0.2); cursor: pointer; font-family: sans-serif; font-weight: 500;">Settings</button>
-</div> -->
+
+<div class="autoeb-settings-button" style="position: fixed; bottom: 2rem; z-index: 2147483646;">
+    <button class="settings">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="lucide lucide-settings-icon lucide-settings">
+            <path
+                d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" />
+            <circle cx="12" cy="12" r="3" />
+        </svg>
+        AutoEB Settings
+    </button>
+</div>

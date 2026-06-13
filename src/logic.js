@@ -9,6 +9,8 @@ import {
 	simulateClick,
 	simulateTyping,
 	sleep,
+	setAutoEBButtonCSS,
+	getPresistence,
 } from "./utils.js";
 import { TIMEOUT, CORRECT_COUNT } from "./config.js";
 
@@ -113,6 +115,8 @@ async function inputAnswerForCurrentQuestion(correct = true) {
 		iframe.querySelector(".c_question-body")?.innerText || "",
 	);
 	const isRadio = iframe.querySelectorAll('input[type="radio"]').length > 0;
+
+	addToLog(`Current UI BODY ${uiBody}`);
 
 	// if uiHead includes Students’ Voices or student[ANYTHING or NOTHING] voice[ANYTHING or NOTHING] (match), answer ratio[0]
 	if (
@@ -234,12 +238,17 @@ export function startAutomation() {
 
 				// Gating time slice required for database mutation reflection
 				await new Promise((r) =>
-					setTimeout(r, Math.floor(Math.random() * 400 + 600)),
+					setTimeout(
+						r,
+						localStorage?.AUTOEB_TIMEOUT ||
+							Math.floor(Math.random() * 400 + 600),
+					),
 				);
 				const nextBtn = iframe?.querySelector("button[btn-for='next']");
 
 				if (!nextBtn || nextBtn.offsetParent === null) {
 					addToLog("Finished: No 'Next' button found.", "INFO");
+					setAutoEBButtonCSS(void 0, "default", "Lesson Completed");
 					if (
 						sessionStorage.AUTOEB_FULL_AUTOMATION === "TASK_START"
 					) {
@@ -263,13 +272,42 @@ export function startAutomation() {
 					// Structural loop sequencing
 					setTimeout(
 						startAutomation,
-						Math.floor(Math.random() * 500 + 500),
+						localStorage?.AUTOEB_TIMEOUT ||
+							Math.floor(Math.random() * 500 + 500),
 					);
 				}
 			} else {
 				addToLog(
 					"Automation stopped: No match found for this screen.",
 					"WARN",
+				);
+
+				setAutoEBButtonCSS(
+					void 0,
+					"error",
+					`Error: NO MATCH FOUND`,
+					false,
+				);
+
+				pujs.popup(
+					"Error Encountered", // Title
+					`AutoEB couldn't automatically match this page with the correct answer. Please open the source data and select the option manually. After you have finished, press the NO MATCH FOUND Button again.`, // Message
+					[
+						{
+							// Buttons
+							text: "Open XML",
+							color: "lightgreen",
+							callback: () => {
+								getPresistence("XMLData").click();
+							},
+						},
+						{
+							// Cancel Button
+							text: "Cancel",
+							callback: () => {},
+						},
+					],
+					"horiz",
 				);
 			}
 		},

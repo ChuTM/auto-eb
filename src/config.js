@@ -16,7 +16,9 @@ export const JUNK_KEYWORDS = new Set([
  * @returns {number} Timeout duration in milliseconds
  */
 export const TIMEOUT = (type = "default", length = 0) => {
-	const BASE_DELAY = parseInt(localStorage?.AUTOEB_TIMEOUT) || 200;
+	if (parseInt(localStorage?.AUTOEB_TIMEOUT))
+		return localStorage.AUTOEB_TIMEOUT;
+	const BASE_DELAY = 200;
 	let t = BASE_DELAY;
 
 	// Human reading speed: ~200-250 words per minute (WPM) -> ~4-5 words per second

@@ -136,17 +136,29 @@ pre[class*="language-"] {
 	bottom: 2rem;
 	right: 2rem;
 	z-index: 9999999;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1em;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 1em;
 }
 
 .autoeb-settings-button .settings {
 	display: block;
-	width: 24px;
-	height: 24px;
-    cursor: pointer;
+	height: 40px;
+	cursor: pointer;
+	display: flex;
+	justify-content: center;
+	gap: 6px;
+	align-items: center;
+	background: #2a2a2a;
+	color: white;
+	border: 1px solid #444;
+	padding: 0.5rem;
+	border-radius: 11px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+	cursor: pointer;
+	font-family: sans-serif;
+	font-weight: 500;
 }
 
 .close-button {
